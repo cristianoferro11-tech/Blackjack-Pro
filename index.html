@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Multi-Player Split</title>
+    <title>Blackjack Pro - Multi-Split Advanced</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
@@ -58,12 +58,12 @@
 
         .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
         .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; min-height: 26px; transition: all 0.3s ease; }
-        .seat-score { font-size: 0.65rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
+        .seat-score { font-size: 0.62rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
 
         /* Animazioni Carte & Tag */
         .card-tag { 
-            background: #ffffff; color: #000; font-weight: 900; padding: 1px 4px; border-radius: 3px; font-size: 0.78rem; border: 1px solid #000; line-height: 1.1;
-            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.72rem; border: 1px solid #000; line-height: 1.1; display: inline-block;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         @keyframes popIn {
@@ -71,26 +71,15 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Container Split Generico per Tutti i Giocatori */
-        .split-container { display: flex; flex-direction: row-reverse; gap: 3px; justify-content: center; width: 100%; }
+        /* Container Multi-Split */
+        .split-container { display: flex; flex-direction: row-reverse; gap: 2px; justify-content: center; width: 100%; flex-wrap: nowrap; overflow-x: auto; }
         .split-hand { 
-            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px; min-width: 26px; min-height: 26px; background: rgba(0,0,0,0.3);
-            transition: all 0.3s ease; text-align: center; display: flex; flex-direction: column; align-items: center;
+            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px 1px; min-width: 22px; min-height: 26px; background: rgba(0,0,0,0.3);
+            transition: all 0.25s ease; text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1;
         }
         .split-hand-label { font-size: 0.42rem; color: #aaa; text-transform: uppercase; margin-bottom: 1px; font-weight: bold; }
-        .split-score { font-size: 0.58rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
-        .split-hand.active-subhand { border: 2px solid #38b000; background: rgba(56,176,0,0.25); transform: scale(1.05); }
-        .split-hand.hand-a { animation: slideRight 0.35s ease forwards; }
-        .split-hand.hand-b { animation: slideLeft 0.35s ease forwards; }
-
-        @keyframes slideRight {
-            0% { transform: translateX(-8px); }
-            100% { transform: translateX(0); }
-        }
-        @keyframes slideLeft {
-            0% { transform: translateX(8px); }
-            100% { transform: translateX(0); }
-        }
+        .split-score { font-size: 0.55rem; font-weight: 900; color: #74c69d; margin-top: 2px; white-space: nowrap; }
+        .split-hand.active-subhand { border: 2px solid #38b000; background: rgba(56,176,0,0.25); transform: scale(1.02); }
 
         /* Badge Raddoppio Animato */
         .double-badge {
@@ -166,7 +155,7 @@
 </head>
 <body>
 
-    <h1>Blackjack Pro - Multi-Player Split</h1>
+    <h1>Blackjack Pro - Multi-Split Advanced</h1>
 
     <div class="top-config">
         <div><span>Punta con Fiches e inserisci carte</span></div>
@@ -278,14 +267,23 @@
         let dealerCards = [];
         let seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
         
+        // Struttura Split avanzata: supporta più mani per ogni postazione
+        function createInitialSplitState() {
+            return {
+                active: false,
+                hands: [], // Lista di oggetti: { id: string, cards: [] }
+                currentIndex: 0
+            };
+        }
+
         let splitStates = {
-            SEAT1: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT2: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT3: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT4: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT5: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT6: { active: false, handA: [], handB: [], current: 'A' },
-            SEAT7: { active: false, handA: [], handB: [], current: 'A' }
+            SEAT1: createInitialSplitState(),
+            SEAT2: createInitialSplitState(),
+            SEAT3: createInitialSplitState(),
+            SEAT4: createInitialSplitState(),
+            SEAT5: createInitialSplitState(),
+            SEAT6: createInitialSplitState(),
+            SEAT7: createInitialSplitState()
         };
 
         let activeSeats = { SEAT1: false, SEAT2: false, SEAT3: false, SEAT4: true, SEAT5: false, SEAT6: false, SEAT7: false };
@@ -325,7 +323,8 @@
 
         function updateChipsDisplay() {
             let userSplit = splitStates[userSeatKey].active;
-            let totalRisk = userBet * (isDoubleActive ? 2 : 1) * (userSplit ? 2 : 1);
+            let numHands = userSplit ? splitStates[userSeatKey].hands.length : 1;
+            let totalRisk = userBet * (isDoubleActive ? 2 : 1) * numHands;
             document.getElementById('currentBetDisplay').innerText = `${userBet}€ ${totalRisk !== userBet ? '(Totale a Rischio: ' + totalRisk + '€)' : ''}`;
         }
 
@@ -341,22 +340,39 @@
             if (currentTarget === 'DEALER') return;
 
             let st = splitStates[currentTarget];
-            let cards = seatsCards[currentTarget];
 
+            // Primo split della mano principale
             if (!st.active) {
+                let cards = seatsCards[currentTarget];
                 if (cards.length < 2) {
                     alert(`Servono almeno 2 carte per dividere la mano di ${currentTarget === userSeatKey ? 'IO' : currentTarget}!`);
                     return;
                 }
                 st.active = true;
-                st.handA = [cards[0]];
-                st.handB = [cards[1]];
-                st.current = 'A';
+                st.hands = [
+                    { id: 'A', cards: [cards[0]] },
+                    { id: 'B', cards: [cards[1]] }
+                ];
+                st.currentIndex = 0;
+                seatsCards[currentTarget] = [];
             } else {
-                st.active = false;
-                seatsCards[currentTarget] = [...st.handA, ...st.handB];
-                st.handA = [];
-                st.handB = [];
+                // Re-Split su una mano già splittata (es. A -> A1, A2)
+                let activeHand = st.hands[st.currentIndex];
+                if (!activeHand || activeHand.cards.length < 2) {
+                    alert("Servono almeno 2 carte nella sotto-mano corrente per poter eseguire un altro split!");
+                    return;
+                }
+                
+                // Crea due sotto-mani dalla mano corrente
+                let oldId = activeHand.id;
+                let c1 = activeHand.cards[0];
+                let c2 = activeHand.cards[1];
+
+                let newHand1 = { id: `${oldId}1`, cards: [c1] };
+                let newHand2 = { id: `${oldId}2`, cards: [c2] };
+
+                // Sostituisce la mano corrente con le due nuove sotto-mani
+                st.hands.splice(st.currentIndex, 1, newHand1, newHand2);
             }
             
             updateChipsDisplay();
@@ -418,8 +434,8 @@
                 let currentTarget = activePlayerOrder[currentPlayerTurnIndex];
                 let st = splitStates[currentTarget];
                 
-                if (st.active && st.current === 'A') {
-                    st.current = 'B';
+                if (st.active && st.currentIndex < st.hands.length - 1) {
+                    st.currentIndex++;
                 } else {
                     currentPlayerTurnIndex++;
                 }
@@ -436,22 +452,22 @@
         function inputCard(val) {
             let target = getActiveTarget();
             let st = target !== 'DEALER' ? splitStates[target] : null;
-            let currentSubHand = st ? st.current : 'A';
+            let handIdxState = (st && st.active) ? st.currentIndex : -1;
 
             addCardToTarget(target, val);
-            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex, playerIdx: currentPlayerTurnIndex, subHand: currentSubHand });
+            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex, playerIdx: currentPlayerTurnIndex, handIndex: handIdxState });
 
             if (!manualTargetOverride && currentQueueIndex < targetQueue.length) {
                 currentQueueIndex++;
             }
 
             if (target !== 'DEALER' && currentQueueIndex >= targetQueue.length) {
-                let currentHandArr = st.active ? (st.current === 'A' ? st.handA : st.handB) : seatsCards[target];
+                let currentHandArr = st.active ? st.hands[st.currentIndex].cards : seatsCards[target];
                 let res = calculateHandTotal(currentHandArr);
                 
-                if (res.total >= 21) {
-                    if (st.active && st.current === 'A') {
-                        st.current = 'B';
+                if (res.highTotal >= 21 || (res.lowTotal >= 21)) {
+                    if (st.active && st.currentIndex < st.hands.length - 1) {
+                        st.currentIndex++;
                     } else {
                         currentPlayerTurnIndex++;
                     }
@@ -469,8 +485,7 @@
             } else {
                 let st = splitStates[targetKey];
                 if (st.active) {
-                    if (st.current === 'A') st.handA.push(cardVal);
-                    else st.handB.push(cardVal);
+                    st.hands[st.currentIndex].cards.push(cardVal);
                 } else {
                     seatsCards[targetKey].push(cardVal);
                 }
@@ -489,9 +504,11 @@
             } else {
                 let st = splitStates[targetKey];
                 if (st.active) {
-                    if (lastInput.subHand === 'A') st.handA.pop();
-                    else st.handB.pop();
-                    st.current = lastInput.subHand;
+                    let hIdx = lastInput.handIndex >= 0 ? lastInput.handIndex : st.currentIndex;
+                    if (st.hands[hIdx]) {
+                        st.hands[hIdx].cards.pop();
+                    }
+                    st.currentIndex = hIdx;
                 } else {
                     seatsCards[targetKey].pop();
                 }
@@ -528,23 +545,39 @@
             document.getElementById('recommendedBetDisplay').innerText = `(Consigliati: ${recBet}€)`;
         }
 
+        /* Calcolo Avanzato del Punteggio: Gestione Soft e Asso (es. 5/15) */
         function calculateHandTotal(cardsArr) {
-            if (!cardsArr || cardsArr.length === 0) return { total: 0, isSoft: false, busted: false, isBlackjack: false };
+            if (!cardsArr || cardsArr.length === 0) return { total: 0, displayStr: "0", isSoft: false, busted: false, isBlackjack: false };
             
-            let total = 0;
+            let hardTotal = 0;
             let aceCount = 0;
+            
             cardsArr.forEach(c => {
-                if (c === 'A') { aceCount++; total += 11; }
-                else if (['J','Q','K','10'].includes(c)) total += 10;
-                else total += parseInt(c);
+                if (c === 'A') { aceCount++; hardTotal += 1; }
+                else if (['J','Q','K','10'].includes(c)) hardTotal += 10;
+                else hardTotal += parseInt(c);
             });
 
-            while (total > 21 && aceCount > 0) {
-                total -= 10;
-                aceCount--;
+            let softTotal = hardTotal;
+            let isSoft = false;
+
+            if (aceCount > 0 && hardTotal + 10 <= 21) {
+                softTotal = hardTotal + 10;
+                isSoft = true;
             }
 
-            return { total, isSoft: aceCount > 0, busted: total > 21, isBlackjack: cardsArr.length === 2 && total === 21 };
+            let finalTotal = isSoft ? softTotal : hardTotal;
+            let displayStr = isSoft ? `${hardTotal}/${softTotal}` : `${finalTotal}`;
+
+            return { 
+                total: finalTotal, 
+                lowTotal: hardTotal,
+                highTotal: finalTotal,
+                displayStr: displayStr, 
+                isSoft: isSoft, 
+                busted: hardTotal > 21, 
+                isBlackjack: cardsArr.length === 2 && finalTotal === 21 
+            };
         }
 
         function getBaseValue(c) {
@@ -555,14 +588,14 @@
 
         function calculateStrategy() {
             let uSt = splitStates[userSeatKey];
-            const currentHandCards = uSt.active ? (uSt.current === 'A' ? uSt.handA : uSt.handB) : seatsCards[userSeatKey];
+            const currentHandCards = uSt.active ? (uSt.hands[uSt.currentIndex] ? uSt.hands[uSt.currentIndex].cards : []) : seatsCards[userSeatKey];
             if (dealerCards.length === 0 || currentHandCards.length === 0) return { action: "DISTRIBUZIONE...", note: "Attendi completamento carte" };
 
             const info = calculateHandTotal(currentHandCards);
             const dVal = getBaseValue(dealerCards[0]);
             const tc = currentTrueCount;
 
-            let prefix = uSt.active ? `[MANO ${uSt.current === 'A' ? 'A (Destra)' : 'B (Sinistra)'}] ` : '';
+            let prefix = uSt.active ? `[MANO ${uSt.hands[uSt.currentIndex].id}] ` : '';
 
             if (info.busted) return { action: prefix + "SBALLATO!", note: "" };
             if (info.isBlackjack) return { action: prefix + "BLACKJACK!", note: "Paga 3 a 2" };
@@ -575,10 +608,10 @@
             if (info.total === 11 && currentHandCards.length === 2 && dVal === 11 && tc >= 1) return { action: prefix + "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
             if (info.total === 10 && currentHandCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: prefix + "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
 
-            if (!uSt.active && currentHandCards.length === 2 && getBaseValue(currentHandCards[0]) === getBaseValue(currentHandCards[1])) {
+            if (currentHandCards.length === 2 && getBaseValue(currentHandCards[0]) === getBaseValue(currentHandCards[1])) {
                 const pVal = getBaseValue(currentHandCards[0]);
-                if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
-                if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
+                if (pVal === 11 || pVal === 8) return { action: prefix + "DIVIDI", note: insuranceNote };
+                if (pVal === 9) return { action: prefix + ((dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI"), note: insuranceNote };
             }
 
             if (info.total >= 17 && !info.isSoft) return { action: prefix + "STAI", note: insuranceNote };
@@ -610,7 +643,7 @@
             if (dealerCards.length < 2) return;
             
             let uSt = splitStates[userSeatKey];
-            if (uSt.active && (uSt.handA.length === 0 || uSt.handB.length === 0)) return;
+            if (uSt.active && uSt.hands.some(h => h.cards.length === 0)) return;
             if (!uSt.active && seatsCards[userSeatKey].length < 2) return;
 
             const dealerRes = calculateHandTotal(dealerCards);
@@ -620,9 +653,9 @@
                 let winAmount = 0;
 
                 if (uSt.active) {
-                    let winA = evaluateSingleHandWin(calculateHandTotal(uSt.handA), dealerRes, baseStake);
-                    let winB = evaluateSingleHandWin(calculateHandTotal(uSt.handB), dealerRes, baseStake);
-                    winAmount = winA + winB;
+                    uSt.hands.forEach(h => {
+                        winAmount += evaluateSingleHandWin(calculateHandTotal(h.cards), dealerRes, baseStake);
+                    });
                 } else {
                     winAmount = evaluateSingleHandWin(calculateHandTotal(seatsCards[userSeatKey]), dealerRes, baseStake);
                 }
@@ -657,7 +690,7 @@
             const dSlot = document.getElementById('dealerSlot');
             const dInfo = calculateHandTotal(dealerCards);
             dSlot.innerHTML = dealerCards.map(c => `<span class="card-tag">${c}</span>`).join('');
-            document.getElementById('dealerTitle').innerText = `Mazziere (${dInfo.total})`;
+            document.getElementById('dealerTitle').innerText = `Mazziere (${dInfo.displayStr})`;
             dSlot.style.borderColor = (currentTarget === 'DEALER') ? '#38b000' : '#d4af37';
 
             for (let i = 1; i <= 7; i++) {
@@ -673,35 +706,30 @@
                 if (key === currentTarget) seatEl.classList.add('target-turn');
 
                 if (st.active) {
-                    let scoreA = calculateHandTotal(st.handA).total;
-                    let scoreB = calculateHandTotal(st.handB).total;
+                    let handsHTML = st.hands.map((h, idx) => {
+                        let hInfo = calculateHandTotal(h.cards);
+                        let isActiveSubhand = (idx === st.currentIndex && key === currentTarget);
+                        return `
+                            <div class="split-hand ${isActiveSubhand ? 'active-subhand' : ''}">
+                                <div class="split-hand-label">${h.id}</div>
+                                <div>${h.cards.map(c => `<span class="card-tag">${c}</span>`).join('')}</div>
+                                <div class="split-score">(${hInfo.displayStr})</div>
+                            </div>
+                        `;
+                    }).join('');
 
-                    cardsEl.innerHTML = `
-                        <div class="split-container">
-                            <div class="split-hand hand-a ${st.current === 'A' && key === currentTarget ? 'active-subhand' : ''}">
-                                <div class="split-hand-label">A</div>
-                                <div>${st.handA.map(c => `<span class="card-tag">${c}</span>`).join('')}</div>
-                                <div class="split-score">(${scoreA})</div>
-                            </div>
-                            <div class="split-hand hand-b ${st.current === 'B' && key === currentTarget ? 'active-subhand' : ''}">
-                                <div class="split-hand-label">B</div>
-                                <div>${st.handB.map(c => `<span class="card-tag">${c}</span>`).join('')}</div>
-                                <div class="split-score">(${scoreB})</div>
-                            </div>
-                        </div>
-                    `;
-                    scoreEl.innerText = ""; // Nasconde il punteggio singolo principale quando è in split
+                    cardsEl.innerHTML = `<div class="split-container">${handsHTML}</div>`;
+                    scoreEl.innerText = ""; 
                 } else {
                     cardsEl.innerHTML = seatsCards[key].map(c => `<span class="card-tag">${c}</span>`).join('');
-                    let handScore = calculateHandTotal(seatsCards[key]).total;
-                    scoreEl.innerText = seatsCards[key].length > 0 ? `(${handScore})` : "";
+                    let handInfo = calculateHandTotal(seatsCards[key]);
+                    scoreEl.innerText = seatsCards[key].length > 0 ? `(${handInfo.displayStr})` : "";
                 }
             }
 
             let curSt = currentTarget !== 'DEALER' ? splitStates[currentTarget] : null;
-            document.getElementById('btnSplit').classList.toggle('active', curSt && curSt.active);
 
-            let turnText = currentTarget === 'DEALER' ? 'MAZZIERE' : (currentTarget === userSeatKey ? (splitStates[userSeatKey].active ? `IO (MANO ${splitStates[userSeatKey].current === 'A' ? 'A - DESTRA' : 'B - SINISTRA'})` : 'LA TUA MANO (IO)') : `POSTAZIONE P${currentTarget.replace('SEAT','')}${curSt && curSt.active ? ' (MANO ' + curSt.current + ')' : ''}`);
+            let turnText = currentTarget === 'DEALER' ? 'MAZZIERE' : (currentTarget === userSeatKey ? (splitStates[userSeatKey].active ? `IO (MANO ${splitStates[userSeatKey].hands[splitStates[userSeatKey].currentIndex].id})` : 'LA TUA MANO (IO)') : `POSTAZIONE P${currentTarget.replace('SEAT','')}${curSt && curSt.active ? ' (MANO ' + curSt.hands[curSt.currentIndex].id + ')' : ''}`);
             document.getElementById('turnTracker').innerText = handResolved ? "MANO CONCLUSA (CLICCA NUOVA MANO)" : `PROSSIMA CARTA PER: ${turnText}`;
 
             if (!handResolved) {
@@ -726,13 +754,13 @@
             dealerCards = [];
             seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
             splitStates = {
-                SEAT1: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT2: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT3: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT4: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT5: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT6: { active: false, handA: [], handB: [], current: 'A' },
-                SEAT7: { active: false, handA: [], handB: [], current: 'A' }
+                SEAT1: createInitialSplitState(),
+                SEAT2: createInitialSplitState(),
+                SEAT3: createInitialSplitState(),
+                SEAT4: createInitialSplitState(),
+                SEAT5: createInitialSplitState(),
+                SEAT6: createInitialSplitState(),
+                SEAT7: createInitialSplitState()
             };
             manualTargetOverride = null;
             currentQueueIndex = 0;
