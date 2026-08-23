@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Multi-Player & Undo Engine</title>
+    <title>Blackjack Pro - Automatic Dealing & Auto Resolve</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        h1 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
+        h1 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
 
         /* Sfondo Tavolo Verde */
         .felt-table { 
@@ -15,8 +15,8 @@
             max-width: 500px; 
             background: radial-gradient(circle, #2d6a4f 0%, #1b4332 70%, #081c15 100%); 
             border: 3px solid #d4af37; 
-            border-radius: 15px 15px 160px 160px; 
-            padding: 10px 4px 22px 4px; 
+            border-radius: 15px 15px 140px 140px; 
+            padding: 8px 4px 14px 4px; 
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 6px 15px rgba(0,0,0,0.6); 
             margin-bottom: 6px; 
         }
@@ -25,46 +25,73 @@
         .dealer-area { text-align: center; margin-bottom: 6px; }
         .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
 
-        /* Postazioni (P1 Destra -> P7 Sinistra) */
-        .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
+        /* Postazioni Tavolo (7 a 1) */
+        .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 6px; align-items: flex-end; padding: 0 2px; }
         .seat { 
             width: 62px; 
             background: rgba(0,0,0,0.45); 
-            border: 1px solid rgba(212,175,55,0.4); 
-            border-radius: 8px; 
+            border: 1px solid rgba(212,175,55,0.3); 
+            border-radius: 6px; 
             padding: 3px 1px; 
             text-align: center; 
             cursor: pointer;
             transition: all 0.2s ease;
+            opacity: 0.5;
         }
-        .seat.active { border: 2px solid #38b000; background: rgba(56,176,0,0.2); }
-        .seat.user-seat { border: 2px solid #d4af37; background: rgba(212,175,55,0.3); box-shadow: 0 0 8px rgba(212,175,55,0.6); }
-        .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
+        .seat.active-player { opacity: 1; border-color: #d4af37; }
+        .seat.target-turn { border: 2px solid #38b000 !important; background: rgba(56,176,0,0.35) !important; opacity: 1; transform: scale(1.05); }
+        .seat.user-seat { border: 2px solid #d4af37; background: rgba(212,175,55,0.25); opacity: 1; }
+        .seat-title { font-size: 0.52rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
         .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; min-height: 26px; }
 
-        .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #000; line-height: 1.1; }
+        .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.78rem; border: 1px solid #000; line-height: 1.1; }
 
-        /* Controllo Modalità Gioco e Bankroll */
+        /* Indicatore Turno Corrente */
+        .turn-tracker { width: 100%; max-width: 500px; background: #111; border: 1px solid #38b000; color: #38b000; font-weight: bold; font-size: 0.75rem; text-align: center; padding: 4px; border-radius: 6px; margin-bottom: 6px; text-transform: uppercase; }
+
+        /* Top Config Bankroll */
         .top-config { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; background: rgba(0,0,0,0.7); border: 1px solid #d4af37; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.72rem; }
         .bankroll-input { width: 65px; background: #222; border: 1px solid #d4af37; color: #fff; font-weight: bold; padding: 2px 4px; border-radius: 4px; text-align: center; }
-        .mode-toggle { background: #111; border: 1px solid #d4af37; color: #d4af37; padding: 3px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        /* Controlli Raddoppio e Split */
+        .special-actions-row { display: flex; justify-content: space-around; width: 100%; max-width: 500px; background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 6px; padding: 4px; margin-bottom: 6px; gap: 6px; }
+        .opt-btn { flex: 1; padding: 5px; font-size: 0.7rem; font-weight: bold; border-radius: 4px; border: 1px solid #777; background: #222; color: #fff; cursor: pointer; text-transform: uppercase; }
+        .opt-btn.active { background: #d4af37; color: #000; border-color: #fff; font-weight: 900; }
 
         /* Output Decisione */
-        .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 6px; }
+        .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 8px; padding: 5px; text-align: center; margin-bottom: 6px; }
         .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
-        .decision-text { font-size: 1.2rem; font-weight: 900; color: #74c69d; }
-        .deviation-note { font-size: 0.68rem; color: #d4af37; font-weight: bold; }
-        .outcome-text { font-size: 1.1rem; font-weight: 900; margin-top: 2px; }
+        .decision-text { font-size: 1.15rem; font-weight: 900; color: #74c69d; }
+        .deviation-note { font-size: 0.65rem; color: #d4af37; font-weight: bold; }
+        .outcome-text { font-size: 1rem; font-weight: 900; margin-top: 2px; }
 
-        /* Dashboard Kelly Stats */
-        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.7rem; background: rgba(0,0,0,0.6); padding: 5px 8px; border-radius: 6px; margin-bottom: 6px; }
+        /* Area Chip Betting System */
+        .chips-section { width: 100%; max-width: 500px; background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 8px; padding: 5px; margin-bottom: 6px; text-align: center; }
+        .chips-title { font-size: 0.65rem; color: #aaa; text-transform: uppercase; margin-bottom: 3px; }
+        .chips-row { display: flex; justify-content: space-around; align-items: center; gap: 4px; }
+        
+        .chip {
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.8rem; color: white; border: 3px dashed #ffffff; box-shadow: 0 3px 6px rgba(0,0,0,0.6);
+            cursor: pointer; user-select: none; transition: transform 0.1s;
+        }
+        .chip:active { transform: scale(0.9); }
+        .chip-5 { background: radial-gradient(circle, #e63946, #9e2a2b); }
+        .chip-10 { background: radial-gradient(circle, #1d3557, #457b9d); }
+        .chip-25 { background: radial-gradient(circle, #2a9d8f, #116a5d); }
+        .chip-50 { background: radial-gradient(circle, #e07a5f, #a03c28); }
+        .chip-100 { background: radial-gradient(circle, #2b2b2b, #000000); border-color: #d4af37; color: #d4af37; }
+        .chip-reset { background: #333; border: 1px solid #777; width: 34px; height: 34px; font-size: 0.65rem; color: #fff; border-radius: 50%; cursor: pointer; }
+
+        /* Stats Row */
+        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.7rem; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; }
         .stat-val { color: #d4af37; font-weight: bold; }
         .profit-pos { color: #52b788; font-weight: bold; }
         .profit-neg { color: #e63946; font-weight: bold; }
 
         /* Tastierino */
         .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 500px; margin-bottom: 6px; }
-        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 9px 0; border-radius: 6px; cursor: pointer; text-align: center; }
+        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 8px 0; border-radius: 6px; cursor: pointer; text-align: center; }
         .key-btn:active { background: #d4af37; color: black; }
         .key-btn.asso { background: #d4af37; color: black; }
 
@@ -72,26 +99,21 @@
         .actions-row { display: flex; gap: 4px; width: 100%; max-width: 500px; margin-top: auto; }
         .act-btn { flex: 1; padding: 9px 2px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.72rem; text-transform: uppercase; }
         .btn-undo { background: #f77f00; color: white; }
-        .btn-resolve { background: #2a9d8f; color: white; }
         .btn-next { background: #457b9d; color: white; }
         .btn-reset { background: #e63946; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>Blackjack Pro - Multi-Player</h1>
+    <h1>Blackjack Pro - Auto Dealing</h1>
 
     <!-- Configurazione Top -->
     <div class="top-config">
+        <div><span>Punta con Fiches e clicca i numeri</span></div>
         <div>
-            <span>Modo:</span>
-            <button id="modeBtn" class="mode-toggle" onclick="toggleMultiplayerMode()">Tutti i Giocatori</button>
-        </div>
-        <div>
-            <span>Capitale:</span>
+            <span>Bankroll:</span>
             <input type="number" id="initBankrollInput" class="bankroll-input" value="500" step="50" onchange="setInitialBankroll(this.value)">€
         </div>
-        <span>Unit: <strong id="unitBaseVal" style="color: #d4af37;">5€</strong></span>
     </div>
 
     <!-- Tavolo Verde -->
@@ -99,45 +121,67 @@
         <!-- Dealer -->
         <div class="dealer-area">
             <div class="seat-title" id="dealerTitle">Mazziere (0)</div>
-            <div id="dealerSlot" class="dealer-card-slot" onclick="selectTarget('DEALER')"></div>
+            <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
         </div>
 
-        <!-- 7 Postazioni -->
+        <!-- 7 Postazioni (Da P7 a P1) -->
         <div class="seats-container">
-            <div id="seat1" class="seat" onclick="selectTarget('SEAT1')">
-                <div class="seat-title" id="st1">P1</div>
-                <div class="seat-cards" id="sc1"></div>
-            </div>
-            <div id="seat2" class="seat" onclick="selectTarget('SEAT2')">
-                <div class="seat-title" id="st2">P2</div>
-                <div class="seat-cards" id="sc2"></div>
-            </div>
-            <div id="seat3" class="seat" onclick="selectTarget('SEAT3')">
-                <div class="seat-title" id="st3">P3</div>
-                <div class="seat-cards" id="sc3"></div>
-            </div>
-            <div id="seat4" class="seat user-seat" onclick="selectTarget('SEAT4')">
-                <div class="seat-title" id="st4">IO (P4)</div>
-                <div class="seat-cards" id="sc4"></div>
-            </div>
-            <div id="seat5" class="seat" onclick="selectTarget('SEAT5')">
-                <div class="seat-title" id="st5">P5</div>
-                <div class="seat-cards" id="sc5"></div>
-            </div>
-            <div id="seat6" class="seat" onclick="selectTarget('SEAT6')">
-                <div class="seat-title" id="st6">P6</div>
-                <div class="seat-cards" id="sc6"></div>
-            </div>
-            <div id="seat7" class="seat" onclick="selectTarget('SEAT7')">
+            <div id="seat7" class="seat" onclick="toggleSeatActive('SEAT7')">
                 <div class="seat-title" id="st7">P7</div>
                 <div class="seat-cards" id="sc7"></div>
             </div>
+            <div id="seat6" class="seat" onclick="toggleSeatActive('SEAT6')">
+                <div class="seat-title" id="st6">P6</div>
+                <div class="seat-cards" id="sc6"></div>
+            </div>
+            <div id="seat5" class="seat" onclick="toggleSeatActive('SEAT5')">
+                <div class="seat-title" id="st5">P5</div>
+                <div class="seat-cards" id="sc5"></div>
+            </div>
+            <div id="seat4" class="seat user-seat active-player" onclick="toggleSeatActive('SEAT4')">
+                <div class="seat-title" id="st4">IO (P4)</div>
+                <div class="seat-cards" id="sc4"></div>
+            </div>
+            <div id="seat3" class="seat" onclick="toggleSeatActive('SEAT3')">
+                <div class="seat-title" id="st3">P3</div>
+                <div class="seat-cards" id="sc3"></div>
+            </div>
+            <div id="seat2" class="seat" onclick="toggleSeatActive('SEAT2')">
+                <div class="seat-title" id="st2">P2</div>
+                <div class="seat-cards" id="sc2"></div>
+            </div>
+            <div id="seat1" class="seat" onclick="toggleSeatActive('SEAT1')">
+                <div class="seat-title" id="st1">P1</div>
+                <div class="seat-cards" id="sc1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicatore Turno Automatico -->
+    <div id="turnTracker" class="turn-tracker">PROSSIMA CARTA PER: P4</div>
+
+    <!-- Opzioni Speciali: Raddoppio & Split -->
+    <div class="special-actions-row">
+        <button id="btnSplit" class="opt-btn" onclick="toggleSplit()">✂️ Split Mano</button>
+        <button id="btnDouble" class="opt-btn" onclick="toggleDouble()">2x Raddoppio</button>
+    </div>
+
+    <!-- System Chip Puntata -->
+    <div class="chips-section">
+        <div class="chips-title">Puntata Base: <strong id="currentBetDisplay" style="color:#74c69d; font-size:0.85rem;">0€</strong> <span id="recommendedBetDisplay" style="color:#d4af37; font-size:0.68rem; margin-left:6px;">(Consigliati: 5€)</span></div>
+        <div class="chips-row">
+            <div class="chip chip-5" onclick="addChip(5)">5</div>
+            <div class="chip chip-10" onclick="addChip(10)">10</div>
+            <div class="chip chip-25" onclick="addChip(25)">25</div>
+            <div class="chip chip-50" onclick="addChip(50)">50</div>
+            <div class="chip chip-100" onclick="addChip(100)">100</div>
+            <button class="chip-reset" onclick="resetChips()">CLR</button>
         </div>
     </div>
 
     <!-- Decision Box -->
     <div class="decision-box">
-        <div class="decision-title" id="decisionHeader">Consiglio / Esito Mano</div>
+        <div class="decision-title" id="decisionHeader">Consiglio Per La Tua Mano</div>
         <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
         <div id="deviationNote" class="deviation-note"></div>
         <div id="outcomeDisplay" class="outcome-text"></div>
@@ -146,7 +190,6 @@
     <!-- Financials & Stats -->
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
-        <div>Puntata Kelly: <span id="betVal" class="stat-val">5€ (1 U)</span></div>
         <div>Profitto: <span id="profitVal" class="profit-pos">0€</span></div>
         <div>Bankroll: <span id="bankrollVal" class="stat-val">500€</span></div>
     </div>
@@ -167,23 +210,24 @@
 
     <!-- Azioni -->
     <div class="actions-row">
-        <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla</button>
-        <button class="act-btn btn-resolve" onclick="resolveHand()">Risultato</button>
+        <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla Carta</button>
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
-        <button class="act-btn btn-reset" onclick="resetAll()">Reset</button>
+        <button class="act-btn btn-reset" onclick="resetAll()">Reset Mazzo</button>
     </div>
 
     <script>
         let dealerCards = [];
-        let seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
+        let seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
+        let activeSeats = { SEAT1: false, SEAT2: false, SEAT3: false, SEAT4: true, SEAT5: false, SEAT6: false, SEAT7: false };
         let userSeatKey = 'SEAT4';
-        let activeTargetKey = 'DEALER';
-        
-        // Storico azioni per la funzione UNDO
-        let inputHistory = [];
 
-        // Impostazioni Multi-Giocatore
-        let isMultiplayer = true; // Default: consigli per tutti i posti cliccati
+        let targetQueue = [];
+        let currentQueueIndex = 0;
+        let manualTargetOverride = null;
+
+        let isSplitActive = false;
+        let isDoubleActive = false;
+        let inputHistory = [];
 
         // Conteggio mazzo
         let runningCount = 0;
@@ -191,48 +235,86 @@
         const totalDecks = 6;
         let currentTrueCount = 0;
 
-        // Gestione Kelly Bankroll
+        // Gestione Chip & Bankroll
         let initialBankroll = 500;
         let currentBankroll = 500;
-        let unitSize = 5;
         let netProfit = 0;
-        let currentBet = 5;
-        let currentUnits = 1;
+        let userBet = 0; 
         let handResolved = false;
-        let lastActionRecommended = "CHIEDI";
 
-        function toggleMultiplayerMode() {
-            isMultiplayer = !isMultiplayer;
-            document.getElementById('modeBtn').innerText = isMultiplayer ? "Tutti i Giocatori" : "Solo IO";
+        function addChip(amount) {
+            userBet += amount;
+            updateChipsDisplay();
+        }
+
+        function resetChips() {
+            userBet = 0;
+            updateChipsDisplay();
+        }
+
+        function updateChipsDisplay() {
+            let totalRisk = userBet * (isDoubleActive ? 2 : 1) * (isSplitActive ? 2 : 1);
+            document.getElementById('currentBetDisplay').innerText = `${userBet}€ ${totalRisk !== userBet ? '(Totale: ' + totalRisk + '€)' : ''}`;
+        }
+
+        function toggleSeatActive(seatKey) {
+            if (seatKey === userSeatKey) return; // IO è sempre attivo
+            activeSeats[seatKey] = !activeSeats[seatKey];
+            buildDistributionQueue();
             updateUI();
         }
 
-        function setInitialBankroll(val) {
-            let num = parseFloat(val);
-            if (isNaN(num) || num <= 0) num = 500;
-            initialBankroll = num;
-            currentBankroll = num;
-            netProfit = 0;
-            recalculateKellyUnit();
-            updateFinancials();
+        function toggleSplit() {
+            isSplitActive = !isSplitActive;
+            document.getElementById('btnSplit').classList.toggle('active', isSplitActive);
+            updateChipsDisplay();
+            updateUI();
         }
 
-        function recalculateKellyUnit() {
-            unitSize = Math.max(1, Math.floor(currentBankroll / 100));
-            document.getElementById('unitBaseVal').innerText = `${unitSize}€`;
+        function toggleDouble() {
+            isDoubleActive = !isDoubleActive;
+            document.getElementById('btnDouble').classList.toggle('active', isDoubleActive);
+            updateChipsDisplay();
         }
 
-        function selectTarget(key) {
-            if (!isMultiplayer && key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
-                userSeatKey = key;
+        // Costruisce la sequenza di distribuzione: 1° giro (P7->P1->Dealer) + 2° giro (P7->P1)
+        function buildDistributionQueue() {
+            targetQueue = [];
+            let order = ['SEAT7', 'SEAT6', 'SEAT5', 'SEAT4', 'SEAT3', 'SEAT2', 'SEAT1'];
+            
+            // 1° Giro carte giocatori
+            order.forEach(s => { if (activeSeats[s]) targetQueue.push(s); });
+            // 1ª Carta Dealer
+            targetQueue.push('DEALER');
+            // 2° Giro carte giocatori
+            order.forEach(s => { if (activeSeats[s]) targetQueue.push(s); });
+        }
+
+        function getActiveTarget() {
+            if (manualTargetOverride) return manualTargetOverride;
+            if (currentQueueIndex < targetQueue.length) {
+                return targetQueue[currentQueueIndex];
             }
-            activeTargetKey = key;
+            // Dopo la distribuzione iniziale, il focus predefinito per ulteriori carte è il Mazziere o la tua mano
+            return 'DEALER';
+        }
+
+        function selectTargetManual(key) {
+            manualTargetOverride = key;
             updateUI();
         }
 
         function inputCard(val) {
-            addCardToTarget(activeTargetKey, val);
-            inputHistory.push({ target: activeTargetKey, card: val });
+            let target = getActiveTarget();
+            addCardToTarget(target, val);
+            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex });
+
+            if (!manualTargetOverride && currentQueueIndex < targetQueue.length) {
+                currentQueueIndex++;
+            }
+
+            // Calcolo automatico mazziere quando raggiunge 17+
+            checkAutoResolve();
             updateUI();
         }
 
@@ -241,7 +323,7 @@
             if (targetKey === 'DEALER') {
                 dealerCards.push(cardVal);
             } else {
-                seats[targetKey].push(cardVal);
+                seatsCards[targetKey].push(cardVal);
             }
         }
 
@@ -252,14 +334,14 @@
             const targetKey = lastInput.target;
             const cardVal = lastInput.card;
 
-            // Stacca la carta dall'array
             if (targetKey === 'DEALER') {
                 dealerCards.pop();
             } else {
-                seats[targetKey].pop();
+                seatsCards[targetKey].pop();
             }
 
-            // Annulla il conteggio per quella carta
+            currentQueueIndex = lastInput.queueIdx;
+            manualTargetOverride = null;
             updateCount(cardVal, -1);
             handResolved = false;
             document.getElementById('outcomeDisplay').innerText = "";
@@ -277,18 +359,15 @@
             
             const remainingDecks = Math.max(0.5, totalDecks - (totalCardsSeen / 52));
             currentTrueCount = runningCount / remainingDecks;
-            
-            // Rampa di Puntata Kelly basata sul TC
-            if (currentTrueCount <= 1) currentUnits = 1;
-            else if (currentTrueCount < 3) currentUnits = 2;
-            else if (currentTrueCount < 4) currentUnits = 4;
-            else if (currentTrueCount < 5) currentUnits = 6;
-            else currentUnits = 8;
 
-            currentBet = currentUnits * unitSize;
+            let recBet = 5;
+            if (currentTrueCount >= 5) recBet = 40;
+            else if (currentTrueCount >= 4) recBet = 30;
+            else if (currentTrueCount >= 3) recBet = 20;
+            else if (currentTrueCount >= 2) recBet = 10;
 
             document.getElementById('tcVal').innerText = currentTrueCount.toFixed(1);
-            document.getElementById('betVal').innerText = `${currentBet}€ (${currentUnits} U)`;
+            document.getElementById('recommendedBetDisplay').innerText = `(Consigliati: ${recBet}€)`;
         }
 
         function calculateHandTotal(cardsArr) {
@@ -314,11 +393,11 @@
             return parseInt(c);
         }
 
-        function calculateStrategyForTarget(targetSeatKey) {
-            const targetCards = seats[targetSeatKey];
-            if (dealerCards.length === 0 || targetCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e carte del posto" };
+        function calculateStrategy() {
+            const userCards = seatsCards[userSeatKey];
+            if (dealerCards.length === 0 || userCards.length < 2) return { action: "DISTRIBUZIONE...", note: "Attendi completamento carte" };
 
-            const info = calculateHandTotal(targetCards);
+            const info = calculateHandTotal(userCards);
             const dVal = getBaseValue(dealerCards[0]);
             const tc = currentTrueCount;
 
@@ -328,18 +407,16 @@
             let insuranceNote = (dVal === 11 && tc >= 3) ? "⚠️ PRENDI ASSICURAZIONE" : "";
 
             // Deviazioni Illustrious 18
-            if (targetCards.length === 2 && info.total === 16 && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
-            if (targetCards.length === 2 && info.total === 15 && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
-            if (targetCards.length === 2 && info.total === 12 && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
-            if (targetCards.length === 2 && info.total === 12 && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
+            if (userCards.length === 2 && info.total === 16 && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
+            if (userCards.length === 2 && info.total === 15 && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
 
             // Deviazioni Raddoppio
-            if (info.total === 11 && targetCards.length === 2 && dVal === 11 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
-            if (info.total === 10 && targetCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
+            if (info.total === 11 && userCards.length === 2 && dVal === 11 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
+            if (info.total === 10 && userCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
 
             // Strategia Base
-            if (targetCards.length === 2 && getBaseValue(targetCards[0]) === getBaseValue(targetCards[1])) {
-                const pVal = getBaseValue(targetCards[0]);
+            if (userCards.length === 2 && getBaseValue(userCards[0]) === getBaseValue(userCards[1])) {
+                const pVal = getBaseValue(userCards[0]);
                 if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
                 if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
             }
@@ -347,65 +424,56 @@
             if (info.total >= 17 && !info.isSoft) return { action: "STAI", note: insuranceNote };
             if (info.total >= 13 && info.total <= 16 && !info.isSoft) return { action: (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
             if (info.total === 12 && !info.isSoft) return { action: (dVal >= 4 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
-            if (info.total === 11) return { action: (targetCards.length === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
-            if (info.total === 10) return { action: (targetCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 11) return { action: (userCards.length === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 10) return { action: (userCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
 
             return { action: "CHIEDI", note: insuranceNote };
         }
 
-        function resolveHand() {
+        // Calcolo Automatico della Mano Quando il Mazziere Arriva a 17+ o Sballa
+        function checkAutoResolve() {
             if (handResolved) return;
 
-            const userCards = seats[userSeatKey];
-            if (dealerCards.length === 0 || userCards.length < 2) {
-                alert("Inserisci le carte del mazziere e della tua mano (IO)!");
-                return;
-            }
+            const userCards = seatsCards[userSeatKey];
+            if (dealerCards.length < 2 || userCards.length < 2) return;
 
-            const userRes = calculateHandTotal(userCards);
             const dealerRes = calculateHandTotal(dealerCards);
-            let outcomeTxt = "";
-            let winAmount = 0;
+            
+            // Il mazziere deve chiamare fino a 16 e stare da 17 in su (o sballare)
+            if (dealerRes.total >= 17 || dealerRes.busted) {
+                let singleBet = userBet * (isDoubleActive ? 2 : 1);
+                const userRes = calculateHandTotal(userCards);
 
-            let betMultiplier = (lastActionRecommended === "RADDOPPIA") ? 2 : 1;
-            let actualBet = currentBet * betMultiplier;
-
-            if (userRes.busted) {
-                outcomeTxt = `HAI PERSO ❌ (-${actualBet}€)`;
-                winAmount = -actualBet;
-            } else if (userRes.isBlackjack) {
-                if (dealerRes.isBlackjack) {
-                    outcomeTxt = "PARITÀ / PUSH 🤝 (0€)";
-                    winAmount = 0;
+                let winAmount = 0;
+                if (userRes.busted) {
+                    winAmount = -singleBet;
+                } else if (userRes.isBlackjack) {
+                    winAmount = dealerRes.isBlackjack ? 0 : singleBet * 1.5;
+                } else if (dealerRes.busted || userRes.total > dealerRes.total) {
+                    winAmount = singleBet;
+                } else if (userRes.total < dealerRes.total) {
+                    winAmount = -singleBet;
                 } else {
-                    let bjPayout = actualBet * 1.5;
-                    outcomeTxt = `BLACKJACK! 🎉 (+${bjPayout}€)`;
-                    winAmount = bjPayout;
+                    winAmount = 0;
                 }
-            } else if (dealerRes.busted) {
-                outcomeTxt = `IL MAZZIERE SBALLA! VINCI 🎉 (+${actualBet}€)`;
-                winAmount = actualBet;
-            } else if (userRes.total > dealerRes.total) {
-                outcomeTxt = `HAI VINTO! 🎉 (+${actualBet}€)`;
-                winAmount = actualBet;
-            } else if (userRes.total < dealerRes.total) {
-                outcomeTxt = `HAI PERSO ❌ (-${actualBet}€)`;
-                winAmount = -actualBet;
-            } else {
-                outcomeTxt = "PARITÀ / PUSH 🤝 (0€)";
-                winAmount = 0;
+
+                if (isSplitActive) winAmount *= 2; // Raddoppia la posta se in Split
+
+                currentBankroll += winAmount;
+                netProfit += winAmount;
+                handResolved = true;
+
+                let outcomeTxt = "";
+                if (winAmount > 0) outcomeTxt = `AUTO-RISULTATO: VINCI +${winAmount}€ 🎉`;
+                else if (winAmount < 0) outcomeTxt = `AUTO-RISULTATO: PERDI ${winAmount}€ ❌`;
+                else outcomeTxt = "AUTO-RISULTATO: PARITÀ / PUSH 🤝 (0€)";
+
+                const outcomeEl = document.getElementById('outcomeDisplay');
+                outcomeEl.innerText = outcomeTxt;
+                outcomeEl.style.color = winAmount > 0 ? "#52b788" : (winAmount < 0 ? "#e63946" : "#d4af37");
+
+                updateFinancials();
             }
-
-            currentBankroll += winAmount;
-            netProfit += winAmount;
-            handResolved = true;
-
-            const outcomeEl = document.getElementById('outcomeDisplay');
-            outcomeEl.innerText = outcomeTxt;
-            outcomeEl.style.color = winAmount > 0 ? "#52b788" : (winAmount < 0 ? "#e63946" : "#d4af37");
-
-            recalculateKellyUnit();
-            updateFinancials();
         }
 
         function updateFinancials() {
@@ -416,51 +484,65 @@
         }
 
         function updateUI() {
+            let currentTarget = getActiveTarget();
+
+            // Aggiorna Mazziere
             const dSlot = document.getElementById('dealerSlot');
             const dInfo = calculateHandTotal(dealerCards);
             dSlot.innerHTML = dealerCards.map(c => `<span class="card-tag">${c}</span>`).join('');
             document.getElementById('dealerTitle').innerText = `Mazziere (${dInfo.total})`;
+            dSlot.style.borderColor = (currentTarget === 'DEALER') ? '#38b000' : '#d4af37';
 
+            // Aggiorna Postazioni 1..7
             for (let i = 1; i <= 7; i++) {
                 const key = `SEAT${i}`;
                 const seatEl = document.getElementById(`seat${i}`);
-                const titleEl = document.getElementById(`st${i}`);
                 const cardsEl = document.getElementById(`sc${i}`);
 
                 seatEl.className = 'seat';
-                if (key === activeTargetKey) seatEl.classList.add('active');
+                if (activeSeats[key]) seatEl.classList.add('active-player');
                 if (key === userSeatKey) seatEl.classList.add('user-seat');
+                if (key === currentTarget) seatEl.classList.add('target-turn');
 
-                titleEl.innerText = (key === userSeatKey) ? `IO (P${i})` : `P${i}`;
-                cardsEl.innerHTML = seats[key].map(c => `<span class="card-tag">${c}</span>`).join('');
+                cardsEl.innerHTML = seatsCards[key].map(c => `<span class="card-tag">${c}</span>`).join('');
             }
 
+            // Testo indicatore del turno
+            let turnText = currentTarget === 'DEALER' ? 'MAZZIERE' : (currentTarget === userSeatKey ? 'LA TUA MANO (IO)' : `POSTAZIONE P${currentTarget.replace('SEAT','')}`);
+            document.getElementById('turnTracker').innerText = handResolved ? "MANO CONCLUSA (CLICCA NUOVA MANO)" : `PROSSIMA CARTA PER: ${turnText}`;
+
             if (!handResolved) {
-                // Scegli quale posto valutare per il consiglio
-                let targetToEvaluate = userSeatKey;
-                if (isMultiplayer && activeTargetKey.startsWith('SEAT')) {
-                    targetToEvaluate = activeTargetKey;
-                }
-
-                const res = calculateStrategyForTarget(targetToEvaluate);
-                if (targetToEvaluate === userSeatKey) {
-                    lastActionRecommended = res.action;
-                }
-
-                const pName = (targetToEvaluate === userSeatKey) ? "IO (P" + targetToEvaluate.replace('SEAT','') + ")" : "Postazione P" + targetToEvaluate.replace('SEAT','');
-                document.getElementById('decisionHeader').innerText = `Consiglio per ${pName}`;
+                const res = calculateStrategy();
+                document.getElementById('decisionHeader').innerText = `Consiglio Per La Tua Mano`;
                 document.getElementById('decisionOutput').innerText = res.action;
                 document.getElementById('deviationNote').innerText = res.note;
             }
+            updateChipsDisplay();
+        }
+
+        function setInitialBankroll(val) {
+            let num = parseFloat(val);
+            if (isNaN(num) || num <= 0) num = 500;
+            initialBankroll = num;
+            currentBankroll = num;
+            netProfit = 0;
+            updateFinancials();
         }
 
         function nextHand() {
             dealerCards = [];
-            seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
-            activeTargetKey = 'DEALER';
+            seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
+            manualTargetOverride = null;
+            currentQueueIndex = 0;
             handResolved = false;
             inputHistory = [];
+            userBet = 0;
+            isDoubleActive = false;
+            isSplitActive = false;
+            document.getElementById('btnDouble').classList.remove('active');
+            document.getElementById('btnSplit').classList.remove('active');
             document.getElementById('outcomeDisplay').innerText = "";
+            buildDistributionQueue();
             updateUI();
         }
 
@@ -471,15 +553,13 @@
                 currentTrueCount = 0;
                 currentBankroll = initialBankroll;
                 netProfit = 0;
-                inputHistory = [];
-                recalculateKellyUnit();
                 updateFinancials();
                 nextHand();
             }
         }
 
+        buildDistributionQueue();
         updateUI();
-        recalculateKellyUnit();
         updateFinancials();
     </script>
 </body>
