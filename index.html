@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Kelly Bankroll Engine</title>
+    <title>Blackjack Pro - Multi-Player & Undo Engine</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
@@ -25,7 +25,7 @@
         .dealer-area { text-align: center; margin-bottom: 6px; }
         .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
 
-        /* Postazioni invertite (P1 Destra -> P7 Sinistra) */
+        /* Postazioni (P1 Destra -> P7 Sinistra) */
         .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
         .seat { 
             width: 62px; 
@@ -44,14 +44,15 @@
 
         .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #000; line-height: 1.1; }
 
-        /* Configurazione Bankroll Iniziale */
-        .bankroll-config { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; background: rgba(0,0,0,0.7); border: 1px solid #d4af37; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.72rem; }
-        .bankroll-input { width: 70px; background: #222; border: 1px solid #d4af37; color: #fff; font-weight: bold; padding: 2px 4px; border-radius: 4px; text-align: center; }
+        /* Controllo Modalità Gioco e Bankroll */
+        .top-config { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; background: rgba(0,0,0,0.7); border: 1px solid #d4af37; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.72rem; }
+        .bankroll-input { width: 65px; background: #222; border: 1px solid #d4af37; color: #fff; font-weight: bold; padding: 2px 4px; border-radius: 4px; text-align: center; }
+        .mode-toggle { background: #111; border: 1px solid #d4af37; color: #d4af37; padding: 3px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
         /* Output Decisione */
         .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 6px; }
         .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
-        .decision-text { font-size: 1.3rem; font-weight: 900; color: #74c69d; }
+        .decision-text { font-size: 1.2rem; font-weight: 900; color: #74c69d; }
         .deviation-note { font-size: 0.68rem; color: #d4af37; font-weight: bold; }
         .outcome-text { font-size: 1.1rem; font-weight: 900; margin-top: 2px; }
 
@@ -67,23 +68,30 @@
         .key-btn:active { background: #d4af37; color: black; }
         .key-btn.asso { background: #d4af37; color: black; }
 
-        /* Bottoni */
-        .actions-row { display: flex; gap: 6px; width: 100%; max-width: 500px; margin-top: auto; }
-        .act-btn { flex: 1; padding: 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; text-transform: uppercase; }
-        .btn-reset { background: #e63946; color: white; }
-        .btn-next { background: #457b9d; color: white; }
+        /* Bottoni Azioni */
+        .actions-row { display: flex; gap: 4px; width: 100%; max-width: 500px; margin-top: auto; }
+        .act-btn { flex: 1; padding: 9px 2px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.72rem; text-transform: uppercase; }
+        .btn-undo { background: #f77f00; color: white; }
         .btn-resolve { background: #2a9d8f; color: white; }
+        .btn-next { background: #457b9d; color: white; }
+        .btn-reset { background: #e63946; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>Blackjack Pro - Kelly Engine</h1>
+    <h1>Blackjack Pro - Multi-Player</h1>
 
-    <!-- Configurazione Capitale Iniziale -->
-    <div class="bankroll-config">
-        <span>Capitale Iniziale (€):</span>
-        <input type="number" id="initBankrollInput" class="bankroll-input" value="500" step="50" onchange="setInitialBankroll(this.value)">
-        <span>Unit Base (1%): <strong id="unitBaseVal" style="color: #d4af37;">5€</strong></span>
+    <!-- Configurazione Top -->
+    <div class="top-config">
+        <div>
+            <span>Modo:</span>
+            <button id="modeBtn" class="mode-toggle" onclick="toggleMultiplayerMode()">Tutti i Giocatori</button>
+        </div>
+        <div>
+            <span>Capitale:</span>
+            <input type="number" id="initBankrollInput" class="bankroll-input" value="500" step="50" onchange="setInitialBankroll(this.value)">€
+        </div>
+        <span>Unit: <strong id="unitBaseVal" style="color: #d4af37;">5€</strong></span>
     </div>
 
     <!-- Tavolo Verde -->
@@ -129,7 +137,7 @@
 
     <!-- Decision Box -->
     <div class="decision-box">
-        <div class="decision-title">Consiglio / Esito Mano</div>
+        <div class="decision-title" id="decisionHeader">Consiglio / Esito Mano</div>
         <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
         <div id="deviationNote" class="deviation-note"></div>
         <div id="outcomeDisplay" class="outcome-text"></div>
@@ -159,9 +167,10 @@
 
     <!-- Azioni -->
     <div class="actions-row">
-        <button class="act-btn btn-resolve" onclick="resolveHand()">Calcola Risultato</button>
+        <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla</button>
+        <button class="act-btn btn-resolve" onclick="resolveHand()">Risultato</button>
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
-        <button class="act-btn btn-reset" onclick="resetAll()">Reset Mazzo</button>
+        <button class="act-btn btn-reset" onclick="resetAll()">Reset</button>
     </div>
 
     <script>
@@ -170,6 +179,13 @@
         let userSeatKey = 'SEAT4';
         let activeTargetKey = 'DEALER';
         
+        // Storico azioni per la funzione UNDO
+        let inputHistory = [];
+
+        // Impostazioni Multi-Giocatore
+        let isMultiplayer = true; // Default: consigli per tutti i posti cliccati
+
+        // Conteggio mazzo
         let runningCount = 0;
         let totalCardsSeen = 0;
         const totalDecks = 6;
@@ -185,6 +201,12 @@
         let handResolved = false;
         let lastActionRecommended = "CHIEDI";
 
+        function toggleMultiplayerMode() {
+            isMultiplayer = !isMultiplayer;
+            document.getElementById('modeBtn').innerText = isMultiplayer ? "Tutti i Giocatori" : "Solo IO";
+            updateUI();
+        }
+
         function setInitialBankroll(val) {
             let num = parseFloat(val);
             if (isNaN(num) || num <= 0) num = 500;
@@ -196,13 +218,12 @@
         }
 
         function recalculateKellyUnit() {
-            // L'unità base è l'1% del bankroll residuo (minimo 1€)
             unitSize = Math.max(1, Math.floor(currentBankroll / 100));
             document.getElementById('unitBaseVal').innerText = `${unitSize}€`;
         }
 
         function selectTarget(key) {
-            if (key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
+            if (!isMultiplayer && key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
                 userSeatKey = key;
             }
             activeTargetKey = key;
@@ -210,20 +231,49 @@
         }
 
         function inputCard(val) {
-            updateCount(val);
-
-            if (activeTargetKey === 'DEALER') {
-                dealerCards.push(val);
-            } else {
-                seats[activeTargetKey].push(val);
-            }
+            addCardToTarget(activeTargetKey, val);
+            inputHistory.push({ target: activeTargetKey, card: val });
             updateUI();
         }
 
-        function updateCount(card) {
-            totalCardsSeen++;
-            if (['2','3','4','5','6'].includes(card)) runningCount++;
-            else if (['10','J','Q','K','A'].includes(card)) runningCount--;
+        function addCardToTarget(targetKey, cardVal) {
+            updateCount(cardVal, 1);
+            if (targetKey === 'DEALER') {
+                dealerCards.push(cardVal);
+            } else {
+                seats[targetKey].push(cardVal);
+            }
+        }
+
+        function undoLastCard() {
+            if (inputHistory.length === 0) return;
+
+            const lastInput = inputHistory.pop();
+            const targetKey = lastInput.target;
+            const cardVal = lastInput.card;
+
+            // Stacca la carta dall'array
+            if (targetKey === 'DEALER') {
+                dealerCards.pop();
+            } else {
+                seats[targetKey].pop();
+            }
+
+            // Annulla il conteggio per quella carta
+            updateCount(cardVal, -1);
+            handResolved = false;
+            document.getElementById('outcomeDisplay').innerText = "";
+            updateUI();
+        }
+
+        function updateCount(card, direction = 1) {
+            totalCardsSeen += (1 * direction);
+
+            let delta = 0;
+            if (['2','3','4','5','6'].includes(card)) delta = 1;
+            else if (['10','J','Q','K','A'].includes(card)) delta = -1;
+
+            runningCount += (delta * direction);
             
             const remainingDecks = Math.max(0.5, totalDecks - (totalCardsSeen / 52));
             currentTrueCount = runningCount / remainingDecks;
@@ -233,7 +283,7 @@
             else if (currentTrueCount < 3) currentUnits = 2;
             else if (currentTrueCount < 4) currentUnits = 4;
             else if (currentTrueCount < 5) currentUnits = 6;
-            else currentUnits = 8; // Max Bet Ramp per TC >= +5
+            else currentUnits = 8;
 
             currentBet = currentUnits * unitSize;
 
@@ -264,11 +314,11 @@
             return parseInt(c);
         }
 
-        function calculateStrategy() {
-            const userCards = seats[userSeatKey];
-            if (dealerCards.length === 0 || userCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e tua mano" };
+        function calculateStrategyForTarget(targetSeatKey) {
+            const targetCards = seats[targetSeatKey];
+            if (dealerCards.length === 0 || targetCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e carte del posto" };
 
-            const info = calculateHandTotal(userCards);
+            const info = calculateHandTotal(targetCards);
             const dVal = getBaseValue(dealerCards[0]);
             const tc = currentTrueCount;
 
@@ -278,18 +328,18 @@
             let insuranceNote = (dVal === 11 && tc >= 3) ? "⚠️ PRENDI ASSICURAZIONE" : "";
 
             // Deviazioni Illustrious 18
-            if (userCards.length === 2 && info.total === 16 && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
-            if (userCards.length === 2 && info.total === 15 && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
-            if (userCards.length === 2 && info.total === 12 && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
-            if (userCards.length === 2 && info.total === 12 && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
+            if (targetCards.length === 2 && info.total === 16 && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
+            if (targetCards.length === 2 && info.total === 15 && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
+            if (targetCards.length === 2 && info.total === 12 && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
+            if (targetCards.length === 2 && info.total === 12 && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
 
             // Deviazioni Raddoppio
-            if (info.total === 11 && userCards.length === 2 && dVal === 11 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
-            if (info.total === 10 && userCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
+            if (info.total === 11 && targetCards.length === 2 && dVal === 11 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
+            if (info.total === 10 && targetCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
 
             // Strategia Base
-            if (userCards.length === 2 && getBaseValue(userCards[0]) === getBaseValue(userCards[1])) {
-                const pVal = getBaseValue(userCards[0]);
+            if (targetCards.length === 2 && getBaseValue(targetCards[0]) === getBaseValue(targetCards[1])) {
+                const pVal = getBaseValue(targetCards[0]);
                 if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
                 if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
             }
@@ -297,8 +347,8 @@
             if (info.total >= 17 && !info.isSoft) return { action: "STAI", note: insuranceNote };
             if (info.total >= 13 && info.total <= 16 && !info.isSoft) return { action: (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
             if (info.total === 12 && !info.isSoft) return { action: (dVal >= 4 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
-            if (info.total === 11) return { action: (userCards.length === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
-            if (info.total === 10) return { action: (userCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 11) return { action: (targetCards.length === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 10) return { action: (targetCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
 
             return { action: "CHIEDI", note: insuranceNote };
         }
@@ -308,7 +358,7 @@
 
             const userCards = seats[userSeatKey];
             if (dealerCards.length === 0 || userCards.length < 2) {
-                alert("Inserisci prima le carte per te e per il mazziere!");
+                alert("Inserisci le carte del mazziere e della tua mano (IO)!");
                 return;
             }
 
@@ -386,8 +436,19 @@
             }
 
             if (!handResolved) {
-                const res = calculateStrategy();
-                lastActionRecommended = res.action;
+                // Scegli quale posto valutare per il consiglio
+                let targetToEvaluate = userSeatKey;
+                if (isMultiplayer && activeTargetKey.startsWith('SEAT')) {
+                    targetToEvaluate = activeTargetKey;
+                }
+
+                const res = calculateStrategyForTarget(targetToEvaluate);
+                if (targetToEvaluate === userSeatKey) {
+                    lastActionRecommended = res.action;
+                }
+
+                const pName = (targetToEvaluate === userSeatKey) ? "IO (P" + targetToEvaluate.replace('SEAT','') + ")" : "Postazione P" + targetToEvaluate.replace('SEAT','');
+                document.getElementById('decisionHeader').innerText = `Consiglio per ${pName}`;
                 document.getElementById('decisionOutput').innerText = res.action;
                 document.getElementById('deviationNote').innerText = res.note;
             }
@@ -398,6 +459,7 @@
             seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
             activeTargetKey = 'DEALER';
             handResolved = false;
+            inputHistory = [];
             document.getElementById('outcomeDisplay').innerText = "";
             updateUI();
         }
@@ -409,6 +471,7 @@
                 currentTrueCount = 0;
                 currentBankroll = initialBankroll;
                 netProfit = 0;
+                inputHistory = [];
                 recalculateKellyUnit();
                 updateFinancials();
                 nextHand();
