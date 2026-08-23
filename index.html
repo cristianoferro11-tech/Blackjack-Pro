@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Automatic Dealing & Auto Resolve</title>
+    <title>Blackjack Pro - Turn Control & Reversed Seats</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
@@ -25,7 +25,7 @@
         .dealer-area { text-align: center; margin-bottom: 6px; }
         .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
 
-        /* Postazioni Tavolo (7 a 1) */
+        /* Postazioni Tavolo (Invertite: P1 a destra, P7 a sinistra) */
         .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 6px; align-items: flex-end; padding: 0 2px; }
         .seat { 
             width: 62px; 
@@ -98,6 +98,7 @@
         /* Bottoni Azioni */
         .actions-row { display: flex; gap: 4px; width: 100%; max-width: 500px; margin-top: auto; }
         .act-btn { flex: 1; padding: 9px 2px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.72rem; text-transform: uppercase; }
+        .btn-stand { background: #38b000; color: white; font-size: 0.8rem; font-weight: 900; }
         .btn-undo { background: #f77f00; color: white; }
         .btn-next { background: #457b9d; color: white; }
         .btn-reset { background: #e63946; color: white; }
@@ -105,11 +106,11 @@
 </head>
 <body>
 
-    <h1>Blackjack Pro - Auto Dealing</h1>
+    <h1>Blackjack Pro - Sequential Player Turns</h1>
 
     <!-- Configurazione Top -->
     <div class="top-config">
-        <div><span>Punta con Fiches e clicca i numeri</span></div>
+        <div><span>Punta con Fiches e inserisci carte</span></div>
         <div>
             <span>Bankroll:</span>
             <input type="number" id="initBankrollInput" class="bankroll-input" value="500" step="50" onchange="setInitialBankroll(this.value)">€
@@ -124,41 +125,41 @@
             <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
         </div>
 
-        <!-- 7 Postazioni (Da P7 a P1) -->
+        <!-- 7 Postazioni Invertite (Da P1 a P7 da Destra verso Sinistra) -->
         <div class="seats-container">
-            <div id="seat7" class="seat" onclick="toggleSeatActive('SEAT7')">
-                <div class="seat-title" id="st7">P7</div>
-                <div class="seat-cards" id="sc7"></div>
-            </div>
-            <div id="seat6" class="seat" onclick="toggleSeatActive('SEAT6')">
-                <div class="seat-title" id="st6">P6</div>
-                <div class="seat-cards" id="sc6"></div>
-            </div>
-            <div id="seat5" class="seat" onclick="toggleSeatActive('SEAT5')">
-                <div class="seat-title" id="st5">P5</div>
-                <div class="seat-cards" id="sc5"></div>
-            </div>
-            <div id="seat4" class="seat user-seat active-player" onclick="toggleSeatActive('SEAT4')">
-                <div class="seat-title" id="st4">IO (P4)</div>
-                <div class="seat-cards" id="sc4"></div>
-            </div>
-            <div id="seat3" class="seat" onclick="toggleSeatActive('SEAT3')">
-                <div class="seat-title" id="st3">P3</div>
-                <div class="seat-cards" id="sc3"></div>
+            <div id="seat1" class="seat" onclick="toggleSeatActive('SEAT1')">
+                <div class="seat-title" id="st1">P1</div>
+                <div class="seat-cards" id="sc1"></div>
             </div>
             <div id="seat2" class="seat" onclick="toggleSeatActive('SEAT2')">
                 <div class="seat-title" id="st2">P2</div>
                 <div class="seat-cards" id="sc2"></div>
             </div>
-            <div id="seat1" class="seat" onclick="toggleSeatActive('SEAT1')">
-                <div class="seat-title" id="st1">P1</div>
-                <div class="seat-cards" id="sc1"></div>
+            <div id="seat3" class="seat" onclick="toggleSeatActive('SEAT3')">
+                <div class="seat-title" id="st3">P3</div>
+                <div class="seat-cards" id="sc3"></div>
+            </div>
+            <div id="seat4" class="seat user-seat active-player" onclick="toggleSeatActive('SEAT4')">
+                <div class="seat-title" id="st4">IO (P4)</div>
+                <div class="seat-cards" id="sc4"></div>
+            </div>
+            <div id="seat5" class="seat" onclick="toggleSeatActive('SEAT5')">
+                <div class="seat-title" id="st5">P5</div>
+                <div class="seat-cards" id="sc5"></div>
+            </div>
+            <div id="seat6" class="seat" onclick="toggleSeatActive('SEAT6')">
+                <div class="seat-title" id="st6">P6</div>
+                <div class="seat-cards" id="sc6"></div>
+            </div>
+            <div id="seat7" class="seat" onclick="toggleSeatActive('SEAT7')">
+                <div class="seat-title" id="st7">P7</div>
+                <div class="seat-cards" id="sc7"></div>
             </div>
         </div>
     </div>
 
     <!-- Indicatore Turno Automatico -->
-    <div id="turnTracker" class="turn-tracker">PROSSIMA CARTA PER: P4</div>
+    <div id="turnTracker" class="turn-tracker">PROSSIMA CARTA PER: P1</div>
 
     <!-- Opzioni Speciali: Raddoppio & Split -->
     <div class="special-actions-row">
@@ -210,7 +211,8 @@
 
     <!-- Azioni -->
     <div class="actions-row">
-        <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla Carta</button>
+        <button class="act-btn btn-stand" onclick="playerStands()">✋ STAI (PASSA)</button>
+        <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla</button>
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
         <button class="act-btn btn-reset" onclick="resetAll()">Reset Mazzo</button>
     </div>
@@ -224,6 +226,11 @@
         let targetQueue = [];
         let currentQueueIndex = 0;
         let manualTargetOverride = null;
+
+        // Gestione avanzata turni
+        let isInitialDealComplete = false;
+        let activePlayerOrder = [];
+        let currentPlayerTurnIndex = 0;
 
         let isSplitActive = false;
         let isDoubleActive = false;
@@ -277,26 +284,56 @@
             updateChipsDisplay();
         }
 
-        // Costruisce la sequenza di distribuzione: 1° giro (P7->P1->Dealer) + 2° giro (P7->P1)
+        // Costruisce la sequenza di distribuzione da destra verso sinistra (P1 -> P7 -> Dealer)
         function buildDistributionQueue() {
             targetQueue = [];
-            let order = ['SEAT7', 'SEAT6', 'SEAT5', 'SEAT4', 'SEAT3', 'SEAT2', 'SEAT1'];
+            activePlayerOrder = [];
+            let order = ['SEAT1', 'SEAT2', 'SEAT3', 'SEAT4', 'SEAT5', 'SEAT6', 'SEAT7'];
             
+            // Popola lista posti attivi
+            order.forEach(s => { if (activeSeats[s]) activePlayerOrder.push(s); });
+
             // 1° Giro carte giocatori
-            order.forEach(s => { if (activeSeats[s]) targetQueue.push(s); });
+            activePlayerOrder.forEach(s => targetQueue.push(s));
             // 1ª Carta Dealer
             targetQueue.push('DEALER');
             // 2° Giro carte giocatori
-            order.forEach(s => { if (activeSeats[s]) targetQueue.push(s); });
+            activePlayerOrder.forEach(s => targetQueue.push(s));
+
+            currentPlayerTurnIndex = 0;
+            isInitialDealComplete = false;
         }
 
         function getActiveTarget() {
             if (manualTargetOverride) return manualTargetOverride;
+            
+            // Fase 1: Distribuzione iniziale
             if (currentQueueIndex < targetQueue.length) {
                 return targetQueue[currentQueueIndex];
             }
-            // Dopo la distribuzione iniziale, il focus predefinito per ulteriori carte è il Mazziere o la tua mano
+
+            // Fase 2: Gioco sequenziale per posto (Hit/Stand)
+            if (!isInitialDealComplete) {
+                isInitialDealComplete = true;
+                currentPlayerTurnIndex = 0;
+            }
+
+            if (currentPlayerTurnIndex < activePlayerOrder.length) {
+                return activePlayerOrder[currentPlayerTurnIndex];
+            }
+
+            // Fase 3: Tocca al Mazziere
             return 'DEALER';
+        }
+
+        function playerStands() {
+            if (manualTargetOverride) {
+                manualTargetOverride = null;
+            } else if (currentQueueIndex >= targetQueue.length && currentPlayerTurnIndex < activePlayerOrder.length) {
+                currentPlayerTurnIndex++;
+            }
+            checkAutoResolve();
+            updateUI();
         }
 
         function selectTargetManual(key) {
@@ -307,13 +344,20 @@
         function inputCard(val) {
             let target = getActiveTarget();
             addCardToTarget(target, val);
-            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex });
+            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex, playerIdx: currentPlayerTurnIndex });
 
             if (!manualTargetOverride && currentQueueIndex < targetQueue.length) {
                 currentQueueIndex++;
             }
 
-            // Calcolo automatico mazziere quando raggiunge 17+
+            // Se il giocatore che sta ricevendo la carta sballa o fa 21, passa in automatico
+            if (target !== 'DEALER' && currentQueueIndex >= targetQueue.length) {
+                let res = calculateHandTotal(seatsCards[target]);
+                if (res.total >= 21) {
+                    currentPlayerTurnIndex++;
+                }
+            }
+
             checkAutoResolve();
             updateUI();
         }
@@ -341,6 +385,7 @@
             }
 
             currentQueueIndex = lastInput.queueIdx;
+            currentPlayerTurnIndex = lastInput.playerIdx;
             manualTargetOverride = null;
             updateCount(cardVal, -1);
             handResolved = false;
@@ -457,7 +502,7 @@
                     winAmount = 0;
                 }
 
-                if (isSplitActive) winAmount *= 2; // Raddoppia la posta se in Split
+                if (isSplitActive) winAmount *= 2;
 
                 currentBankroll += winAmount;
                 netProfit += winAmount;
@@ -534,6 +579,8 @@
             seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
             manualTargetOverride = null;
             currentQueueIndex = 0;
+            currentPlayerTurnIndex = 0;
+            isInitialDealComplete = false;
             handResolved = false;
             inputHistory = [];
             userBet = 0;
@@ -547,12 +594,13 @@
         }
 
         function resetAll() {
-            if (confirm("Reset completo del mazzo e dei conteggi?")) {
+            if (confirm("Reset completo del mazzo, del True Count e dei dati del tavolo?")) {
                 runningCount = 0;
                 totalCardsSeen = 0;
                 currentTrueCount = 0;
                 currentBankroll = initialBankroll;
                 netProfit = 0;
+                document.getElementById('tcVal').innerText = "0.0";
                 updateFinancials();
                 nextHand();
             }
