@@ -15,7 +15,7 @@
             max-width: 500px;
             position: relative;
             margin-bottom: 12px;
-            padding-bottom: 25px; /* Spazio per far uscire le sedie sotto il bordo */
+            padding-bottom: 25px;
         }
 
         /* Sfondo Tavolo Verde con Curvatura Reale */
@@ -30,7 +30,7 @@
             position: relative;
         }
 
-        /* Area Dealer (Sultavolo) */
+        /* Area Dealer (Sul tavolo) */
         .dealer-area { text-align: center; margin-top: 4px; }
         .dealer-title-badge {
             font-size: 0.85rem;
@@ -58,7 +58,7 @@
             justify-content: space-between; 
             align-items: flex-end; 
             padding: 0 6px; 
-            pointer-events: none; /* Rende la zona passante tranne le sedie */
+            pointer-events: none;
         }
 
         .seat { 
@@ -81,7 +81,7 @@
         #seat7 { transform: translateY(-40px) rotate(22deg); }
         #seat6 { transform: translateY(-18px) rotate(14deg); }
         #seat5 { transform: translateY(-4px) rotate(6deg); }
-        #seat4 { transform: translateY(8px) rotate(0deg); } /* Postazione centrale fuori bordi */
+        #seat4 { transform: translateY(8px) rotate(0deg); }
         #seat3 { transform: translateY(-4px) rotate(-6deg); }
         #seat2 { transform: translateY(-18px) rotate(-14deg); }
         #seat1 { transform: translateY(-40px) rotate(-22deg); }
@@ -141,21 +141,14 @@
         .opt-btn { flex: 1; padding: 6px; font-size: 0.72rem; font-weight: bold; border-radius: 4px; border: 1px solid #777; background: #222; color: #fff; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
         .opt-btn.active { background: #d4af37; color: #000; border-color: #fff; font-weight: 900; box-shadow: 0 0 8px rgba(212,175,55,0.6); }
 
-        /* Decision Box */
-        .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 8px; padding: 5px; text-align: center; margin-bottom: 6px; }
-        .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
-        .decision-text { font-size: 1.15rem; font-weight: 900; color: #74c69d; }
-        .deviation-note { font-size: 0.65rem; color: #d4af37; font-weight: bold; }
-        .outcome-text { font-size: 0.9rem; font-weight: 900; margin-top: 2px; }
-
-        /* Area Chip */
+        /* Area Chip con Tasto x2 */
         .chips-section { width: 100%; max-width: 500px; background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 8px; padding: 5px; margin-bottom: 6px; text-align: center; }
         .chips-title { font-size: 0.65rem; color: #aaa; text-transform: uppercase; margin-bottom: 3px; }
         .chips-row { display: flex; justify-content: space-around; align-items: center; gap: 4px; }
         
         .chip {
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 0.8rem; color: white; border: 3px dashed #ffffff; box-shadow: 0 3px 6px rgba(0,0,0,0.6);
+            width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.78rem; color: white; border: 3px dashed #ffffff; box-shadow: 0 3px 6px rgba(0,0,0,0.6);
             cursor: pointer; user-select: none; transition: transform 0.1s;
         }
         .chip:active { transform: scale(0.9); }
@@ -164,7 +157,18 @@
         .chip-25 { background: radial-gradient(circle, #2a9d8f, #116a5d); }
         .chip-50 { background: radial-gradient(circle, #e07a5f, #a03c28); }
         .chip-100 { background: radial-gradient(circle, #2b2b2b, #000000); border-color: #d4af37; color: #d4af37; }
-        .chip-reset { background: #333; border: 1px solid #777; width: 34px; height: 34px; font-size: 0.65rem; color: #fff; border-radius: 50%; cursor: pointer; }
+        .chip-btn { background: #333; border: 1px solid #777; width: 34px; height: 34px; font-size: 0.65rem; font-weight: bold; color: #fff; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .chip-btn-x2 { background: #d4af37; color: #000; border-color: #fff; }
+
+        /* Box Auto-Risultato Separato */
+        .outcome-box { width: 100%; max-width: 500px; background: rgba(0,0,0,0.85); border: 1px solid #457b9d; border-radius: 6px; padding: 4px; text-align: center; margin-bottom: 6px; min-height: 26px; }
+        .outcome-text { font-size: 0.85rem; font-weight: 900; }
+
+        /* Decision Box Ingrandita */
+        .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 8px; padding: 8px 5px; text-align: center; margin-bottom: 6px; box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+        .decision-title { font-size: 0.65rem; text-transform: uppercase; color: #aaa; letter-spacing: 1px; }
+        .decision-text { font-size: 1.5rem; font-weight: 900; color: #74c69d; margin: 2px 0; }
+        .deviation-note { font-size: 0.72rem; color: #d4af37; font-weight: bold; }
 
         /* Stats Row */
         .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.7rem; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; }
@@ -262,21 +266,20 @@
             <div class="chip chip-25" onclick="addChip(25)">25</div>
             <div class="chip chip-50" onclick="addChip(50)">50</div>
             <div class="chip chip-100" onclick="addChip(100)">100</div>
-            <button class="chip-reset" onclick="resetChips()">CLR</button>
+            <button class="chip-btn" onclick="resetChips()">CLR</button>
+            <button class="chip-btn chip-btn-x2" onclick="doubleBaseBet()">x2</button>
         </div>
-    </div>
-
-    <div class="decision-box">
-        <div class="decision-title" id="decisionHeader">Consiglio Per La Tua Mano</div>
-        <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
-        <div id="deviationNote" class="deviation-note"></div>
-        <div id="outcomeDisplay" class="outcome-text"></div>
     </div>
 
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
         <div>Profitto: <span id="profitVal" class="profit-pos">0€</span></div>
         <div>Bankroll: <span id="bankrollVal" class="stat-val">500€</span></div>
+    </div>
+
+    <!-- Box Auto-Risultato Sopra I Numeri -->
+    <div class="outcome-box">
+        <div id="outcomeDisplay" class="outcome-text"></div>
     </div>
 
     <div class="keypad">
@@ -290,6 +293,13 @@
         <button class="key-btn" onclick="inputCard('9')">9</button>
         <button class="key-btn" onclick="inputCard('10')">10</button>
         <button class="key-btn asso" onclick="inputCard('A')">A</button>
+    </div>
+
+    <!-- Decision Box Sotto I Numeri Ingrandita -->
+    <div class="decision-box">
+        <div class="decision-title" id="decisionHeader">Consiglio Per La Tua Mano</div>
+        <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
+        <div id="deviationNote" class="deviation-note"></div>
     </div>
 
     <div class="actions-row">
@@ -353,6 +363,11 @@
 
         function resetChips() {
             userBet = 0;
+            updateChipsDisplay();
+        }
+
+        function doubleBaseBet() {
+            userBet = userBet * 2;
             updateChipsDisplay();
         }
 
@@ -798,7 +813,9 @@
             isInitialDealComplete = false;
             handResolved = false;
             inputHistory = [];
-            userBet = 0;
+            
+            /* Nota: userBet NON viene azzerato in modo da mantenere la puntata della mano precedente */
+
             isDoubleActive = false;
             document.getElementById('doubleBadge').style.display = 'none';
             document.getElementById('btnDouble').classList.remove('active');
@@ -815,6 +832,7 @@
                 currentTrueCount = 0;
                 currentBankroll = initialBankroll;
                 netProfit = 0;
+                userBet = 0;
                 document.getElementById('tcVal').innerText = "0.0";
                 updateFinancials();
                 nextHand();
