@@ -24,7 +24,19 @@
 
         /* Area Dealer */
         .dealer-area { text-align: center; margin-bottom: 6px; }
-        .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
+        .dealer-title-badge {
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: #000;
+            background: #d4af37;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 4px;
+            box-shadow: 0 0 8px rgba(212,175,55,0.5);
+            text-transform: uppercase;
+        }
+        .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 70px; min-height: 40px; background: rgba(0,0,0,0.5); border: 2px dashed #d4af37; border-radius: 6px; padding: 3px; align-items: center; cursor: pointer; }
 
         /* Postazioni Tavolo (P1 a destra, P7 a sinistra) */
         .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 6px; align-items: flex-end; padding: 0 2px; }
@@ -33,7 +45,7 @@
             background: rgba(0,0,0,0.45); 
             border: 1px solid rgba(212,175,55,0.3); 
             border-radius: 6px; 
-            padding: 3px 1px; 
+            padding: 3px 1px 4px 1px; 
             text-align: center; 
             cursor: pointer;
             transition: all 0.3s ease;
@@ -44,8 +56,9 @@
         .seat.target-turn { border: 2px solid #38b000 !important; background: rgba(56,176,0,0.35) !important; opacity: 1; transform: scale(1.05); }
         .seat.user-seat { border: 2px solid #d4af37; background: rgba(212,175,55,0.25); opacity: 1; width: 85px; }
 
-        .seat-title { font-size: 0.52rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
+        .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
         .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; min-height: 26px; transition: all 0.3s ease; }
+        .seat-score { font-size: 0.65rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
 
         /* Animazioni Carte & Tag */
         .card-tag { 
@@ -62,9 +75,10 @@
         .split-container { display: flex; flex-direction: row-reverse; gap: 3px; justify-content: center; width: 100%; }
         .split-hand { 
             border: 1px dashed #d4af37; border-radius: 4px; padding: 2px; min-width: 26px; min-height: 26px; background: rgba(0,0,0,0.3);
-            transition: all 0.3s ease; text-align: center;
+            transition: all 0.3s ease; text-align: center; display: flex; flex-direction: column; align-items: center;
         }
         .split-hand-label { font-size: 0.42rem; color: #aaa; text-transform: uppercase; margin-bottom: 1px; font-weight: bold; }
+        .split-score { font-size: 0.58rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
         .split-hand.active-subhand { border: 2px solid #38b000; background: rgba(56,176,0,0.25); transform: scale(1.05); }
         .split-hand.hand-a { animation: slideRight 0.35s ease forwards; }
         .split-hand.hand-b { animation: slideLeft 0.35s ease forwards; }
@@ -164,7 +178,7 @@
 
     <div class="felt-table">
         <div class="dealer-area">
-            <div class="seat-title" id="dealerTitle">Mazziere (0)</div>
+            <div class="dealer-title-badge" id="dealerTitle">Mazziere (0)</div><br>
             <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
         </div>
 
@@ -172,31 +186,38 @@
             <div id="seat1" class="seat" onclick="toggleSeatActive('SEAT1')">
                 <div class="seat-title" id="st1">P1</div>
                 <div class="seat-cards" id="sc1"></div>
+                <div class="seat-score" id="score1"></div>
             </div>
             <div id="seat2" class="seat" onclick="toggleSeatActive('SEAT2')">
                 <div class="seat-title" id="st2">P2</div>
                 <div class="seat-cards" id="sc2"></div>
+                <div class="seat-score" id="score2"></div>
             </div>
             <div id="seat3" class="seat" onclick="toggleSeatActive('SEAT3')">
                 <div class="seat-title" id="st3">P3</div>
                 <div class="seat-cards" id="sc3"></div>
+                <div class="seat-score" id="score3"></div>
             </div>
             <div id="seat4" class="seat user-seat active-player" onclick="toggleSeatActive('SEAT4')">
                 <div id="doubleBadge" class="double-badge" style="display: none;">2X DOUBLE</div>
                 <div class="seat-title" id="st4">IO (P4)</div>
                 <div class="seat-cards" id="sc4"></div>
+                <div class="seat-score" id="score4"></div>
             </div>
             <div id="seat5" class="seat" onclick="toggleSeatActive('SEAT5')">
                 <div class="seat-title" id="st5">P5</div>
                 <div class="seat-cards" id="sc5"></div>
+                <div class="seat-score" id="score5"></div>
             </div>
             <div id="seat6" class="seat" onclick="toggleSeatActive('SEAT6')">
                 <div class="seat-title" id="st6">P6</div>
                 <div class="seat-cards" id="sc6"></div>
+                <div class="seat-score" id="score6"></div>
             </div>
             <div id="seat7" class="seat" onclick="toggleSeatActive('SEAT7')">
                 <div class="seat-title" id="st7">P7</div>
                 <div class="seat-cards" id="sc7"></div>
+                <div class="seat-score" id="score7"></div>
             </div>
         </div>
     </div>
@@ -257,7 +278,6 @@
         let dealerCards = [];
         let seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
         
-        // Struttura Split Generica per tutte le postazioni
         let splitStates = {
             SEAT1: { active: false, handA: [], handB: [], current: 'A' },
             SEAT2: { active: false, handA: [], handB: [], current: 'A' },
@@ -282,13 +302,11 @@
         let isDoubleActive = false;
         let inputHistory = [];
 
-        // Conteggio mazzo
         let runningCount = 0;
         let totalCardsSeen = 0;
         const totalDecks = 6;
         let currentTrueCount = 0;
 
-        // Gestione Chip & Bankroll
         let initialBankroll = 500;
         let currentBankroll = 500;
         let netProfit = 0;
@@ -318,7 +336,6 @@
             updateUI();
         }
 
-        // Funzione Split Universale: Splitta il giocatore del turno corrente
         function toggleSplit() {
             let currentTarget = getActiveTarget();
             if (currentTarget === 'DEALER') return;
@@ -402,7 +419,6 @@
                 let st = splitStates[currentTarget];
                 
                 if (st.active && st.current === 'A') {
-                    // Se ha fatto lo split ed è su Mano A, passa a Mano B
                     st.current = 'B';
                 } else {
                     currentPlayerTurnIndex++;
@@ -648,6 +664,7 @@
                 const key = `SEAT${i}`;
                 const seatEl = document.getElementById(`seat${i}`);
                 const cardsEl = document.getElementById(`sc${i}`);
+                const scoreEl = document.getElementById(`score${i}`);
                 const st = splitStates[key];
 
                 seatEl.className = 'seat';
@@ -656,24 +673,31 @@
                 if (key === currentTarget) seatEl.classList.add('target-turn');
 
                 if (st.active) {
+                    let scoreA = calculateHandTotal(st.handA).total;
+                    let scoreB = calculateHandTotal(st.handB).total;
+
                     cardsEl.innerHTML = `
                         <div class="split-container">
                             <div class="split-hand hand-a ${st.current === 'A' && key === currentTarget ? 'active-subhand' : ''}">
                                 <div class="split-hand-label">A</div>
-                                ${st.handA.map(c => `<span class="card-tag">${c}</span>`).join('')}
+                                <div>${st.handA.map(c => `<span class="card-tag">${c}</span>`).join('')}</div>
+                                <div class="split-score">(${scoreA})</div>
                             </div>
                             <div class="split-hand hand-b ${st.current === 'B' && key === currentTarget ? 'active-subhand' : ''}">
                                 <div class="split-hand-label">B</div>
-                                ${st.handB.map(c => `<span class="card-tag">${c}</span>`).join('')}
+                                <div>${st.handB.map(c => `<span class="card-tag">${c}</span>`).join('')}</div>
+                                <div class="split-score">(${scoreB})</div>
                             </div>
                         </div>
                     `;
+                    scoreEl.innerText = ""; // Nasconde il punteggio singolo principale quando è in split
                 } else {
                     cardsEl.innerHTML = seatsCards[key].map(c => `<span class="card-tag">${c}</span>`).join('');
+                    let handScore = calculateHandTotal(seatsCards[key]).total;
+                    scoreEl.innerText = seatsCards[key].length > 0 ? `(${handScore})` : "";
                 }
             }
 
-            // Aggiorna stato bottone Split in base al turno corrente
             let curSt = currentTarget !== 'DEALER' ? splitStates[currentTarget] : null;
             document.getElementById('btnSplit').classList.toggle('active', curSt && curSt.active);
 
