@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Pro Assistant & Trainer</title>
+<link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 550px; margin: 20px auto; padding: 20px; background-color: #121212; color: #fff; }
+        h2 { text-align: center; color: #4caf50; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 15px; }
+        
+        .tab-nav { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; font-weight: bold; font-size: 13px; background: #2a2a2a; color: #888; border: none; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { background: #4caf50; color: white; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
+        select { width: 100%; padding: 10px; font-size: 15px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 5px; }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .toggle-row span { font-size: 14px; font-weight: bold; }
+
+        .count-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .btn-count { padding: 12px 5px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; }
+        .btn-plus { background: #2e7d32; }
+        .btn-zero { background: #616161; }
+        .btn-minus { background: #c62828; }
+        
+        .counter-dashboard { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 12px; border-radius: 6px; margin-top: 12px; }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 22px; font-weight: bold; color: #4caf50; }
+        
+        .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .btn-card { padding: 10px; font-size: 15px; font-weight: bold; background: #333; color: white; border: 1px solid #555; border-radius: 5px; cursor: pointer; }
+        .btn-card:hover { background: #444; }
+        
+        .hand-display { font-size: 16px; margin-top: 10px; font-weight: bold; color: #00bcd4; min-height: 22px; }
+        .action-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-reset { background: #d32f2f; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; flex: 1; }
+        .btn-sub-reset { background: #555; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; flex: 1; }
+        
+        #result { margin-top: 15px; font-size: 22px; text-align: center; font-weight: bold; padding: 15px; border-radius: 8px; }
+        #deviation-note { margin-top: 8px; font-size: 14px; text-align: center; color: #ffeb3b; }
+        
+        .trainer-card { background: #2a2a2a; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .trainer-hand-title { font-size: 14px; color: #aaa; text-transform: uppercase; margin-bottom: 5px; }
+        .trainer-hand-value { font-size: 28px; font-weight: bold; color: #00bcd4; margin-bottom: 15px; }
+        .trainer-choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .btn-choice { padding: 12px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        
+        .btn-hit { background: #ffb300; color: #000; }
+        .btn-stand { background: #e53935; }
+        .btn-double { background: #1e88e5; }
+        .btn-split { background: #8e24aa; }
+        .btn-surrender { background: #ff5722; grid-column: span 2; }
+
+        .score-board { display: flex; justify-content: space-around; background: #1e1e1e; padding: 12px; border-radius: 8px; text-align: center; }
+        #feedback { font-size: 18px; font-weight: bold; text-align: center; padding: 12px; border-radius: 6px; margin-top: 15px; min-height: 25px; }
+        .feedback-correct { background: #2e7d32; color: #fff; }
+        .feedback-wrong { background: #c62828; color: #fff; }
+
+        .HIT { background: #ffb300; color: #000; }
+        .STAND { background: #e53935; color: #fff; }
+        .DOUBLE { background: #1e88e5; color: #fff; }
+        .SPLIT { background: #8e24aa; color: #fff; }
+        .SURRENDER { background: #ff5722; color: #fff; }
+        .INSURANCE { background: #00897b; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <h2>Blackjack Pro Assistant</h2>
+    <div class="subtitle">Basic Strategy, Conteggio & Impostazioni Tavolo</div>
+
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('assistant')">Assistente Live</button>
+        <button class="tab-btn" onclick="switchTab('trainer')">Allenamento</button>
+        <button class="tab-btn" onclick="switchTab('settings')">Impostazioni</button>
+    </div>
+
+    <!-- SCHEDA ASSISTENTE LIVE -->
+    <div id="tab-assistant" class="tab-content active">
+        <div class="section">
+            <label>Conteggio Carte Uscite (Tavolo Completo):</label>
+            <div class="count-grid">
+                <button class="btn-count btn-plus" onclick="registerCountCard('low')">2 - 6 (+1)</button>
+                <button class="btn-count btn-zero" onclick="registerCountCard('neutral')">7 - 9 (0)</button>
+                <button class="btn-count btn-minus" onclick="registerCountCard('high')">10 - A (-1)</button>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label for="decksLeft">Mazzi Rimanenti nel Sabot:</label>
+                <select id="decksLeft" onchange="updateCountDisplay()">
+                    <option value="6">6 Mazzi</option>
+                    <option value="5">5 Mazzi</option>
+                    <option value="4">4 Mazzi</option>
+                    <option value="3">3 Mazzi</option>
+                    <option value="2">2 Mazzi</option>
+                    <option value="1">1 Mazzo</option>
+                </select>
+            </div>
+
+            <div class="counter-dashboard">
+                <div class="stat-box">
+                    <div style="font-size:12px; color:#aaa;">RUNNING COUNT</div>
+                    <div class="stat-val" id="runningCountDisplay">0</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:12px; color:#aaa;">TRUE COUNT</div>
+                    <div class="stat-val" id="trueCountDisplay" style="color: #00bcd4;">0.0</div>
+                </div>
+                <button class="btn-sub-reset" style="max-width: 100px;" onclick="resetCount()">Azzera Conto</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <label for="dealer">Carta Scoperta Banco:</label>
+            <select id="dealer" onchange="calculateMove()">
+                <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+                <option value="8">8</option><option value="9">9</option><option value="10">10 / J / Q / K</option>
+                <option value="11">Asso (A)</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <label>Aggiungi carte alla tua mano:</label>
+            <div class="cards-grid">
+                <button class="btn-card" onclick="addCard('A')">A</button>
+                <button class="btn-card" onclick="addCard('2')">2</button>
+                <button class="btn-card" onclick="addCard('3')">3</button>
+                <button class="btn-card" onclick="addCard('4')">4</button>
+                <button class="btn-card" onclick="addCard('5')">5</button>
+                <button class="btn-card" onclick="addCard('6')">6</button>
+                <button class="btn-card" onclick="addCard('7')">7</button>
+                <button class="btn-card" onclick="addCard('8')">8</button>
+                <button class="btn-card" onclick="addCard('9')">9</button>
+                <button class="btn-card" onclick="addCard('10')">10/J/Q/K</button>
+            </div>
+            
+            <div class="hand-display" id="handDisplay">Mano: nessuna carta</div>
+            <div class="action-btns">
+                <button class="btn-reset" onclick="resetHand()">Svuota Mano</button>
+            </div>
+        </div>
+
+        <div id="result">Seleziona le carte per iniziare</div>
+        <div id="deviation-note"></div>
+    </div>
+
+    <!-- SCHEDA ALLENAMENTO -->
+    <div id="tab-trainer" class="tab-content">
+        <div class="trainer-card">
+            <div class="trainer-hand-title">Carta Banco</div>
+            <div class="trainer-hand-value" id="trainerDealerCard">-</div>
+
+            <div class="trainer-hand-title">La Tua Mano</div>
+            <div class="trainer-hand-value" id="trainerPlayerHand">-</div>
+        </div>
+
+        <div class="trainer-choice-grid">
+            <button class="btn-choice btn-hit" onclick="checkUserChoice('H')">CHIAMA (Hit)</button>
+            <button class="btn-choice btn-stand" onclick="checkUserChoice('S')">STAI (Stand)</button>
+            <button class="btn-choice btn-double" onclick="checkUserChoice('D')">RADDOPPIA (Double)</button>
+            <button class="btn-choice btn-split" onclick="checkUserChoice('P')">DIVIDI (Split)</button>
+            <button class="btn-choice btn-surrender" id="trainerSurrenderBtn" onclick="checkUserChoice('RH')">RESA (Surrender)</button>
+        </div>
+
+        <div id="feedback"></div>
+
+        <div class="score-board" style="margin-top: 15px;">
+            <div>
+                <div style="font-size: 12px; color: #aaa;">CORRETTE</div>
+                <div style="font-size: 20px; font-weight: bold; color: #4caf50;" id="scoreCorrect">0</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; color: #aaa;">ERRATE</div>
+                <div style="font-size: 20px; font-weight: bold; color: #e53935;" id="scoreWrong">0</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; color: #aaa;">ACCURATEZZA</div>
+                <div style="font-size: 20px; font-weight: bold; color: #00bcd4;" id="scoreAccuracy">100%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCHEDA IMPOSTAZIONI REGOLE -->
+    <div id="tab-settings" class="tab-content">
+        <div class="section">
+            <div class="toggle-row">
+                <span>Regola del Banco sul 17 Morbido:</span>
+                <select id="settingSoft17" onchange="updateSettings()" style="width: 50%;">
+                    <option value="S17">Sta sul 17 Morbido (S17)</option>
+                    <option value="H17">Chiama sul 17 Morbido (H17)</option>
+                </select>
+            </div>
+            <div class="toggle-row" style="margin-top: 15px;">
+                <span>Consenti Resa (Late Surrender):</span>
+                <select id="settingSurrender" onchange="updateSettings()" style="width: 50%;">
+                    <option value="true">Sì (Abilitata)</option>
+                    <option value="false" selected>No (Disabilitata)</option>
+                </select>
+            </div>
+            <div class="toggle-row" style="margin-top: 15px;">
+                <span>Raddoppio dopo Split (DAS):</span>
+                <select id="settingDAS" onchange="updateSettings()" style="width: 50%;">
+                    <option value="true" selected>Consentito</option>
+                    <option value="false">Non Consentito</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let playerCards = [];
+        let runningCount = 0;
+
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let currentTrainerScenario = {};
+
+        // Impostazioni Tavolo Default
+        let tableSettings = {
+            soft17Rule: 'S17',
+            surrenderAllowed: false,
+            dasAllowed: true
+        };
+
+        const hardStrategy = {
+            8:  { 2:'H', 3:'H', 4:'H', 5:'H', 6:'H', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            9:  { 2:'H', 3:'D', 4:'D', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            10: { 2:'D', 3:'D', 4:'D', 5:'D', 6:'D', 7:'D', 8:'D', 9:'D', 10:'H', 11:'H' },
+            11: { 2:'D', 3:'D', 4:'D', 5:'D', 6:'D', 7:'D', 8:'D', 9:'D', 10:'D', 11:'D' },
+            12: { 2:'H', 3:'H', 4:'S', 5:'S', 6:'S', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            13: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            14: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            15: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            16: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            17: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'S', 8:'S', 9:'S', 10:'S', 11:'S' }
+        };
+
+        const softStrategy = {
+            2: { 2:'H', 3:'H', 4:'H', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            3: { 2:'H', 3:'H', 4:'H', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            4: { 2:'H', 3:'H', 4:'D', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            5: { 2:'H', 3:'H', 4:'D', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            6: { 2:'H', 3:'D', 4:'D', 5:'D', 6:'D', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            7: { 2:'S', 3:'D', 4:'D', 5:'D', 6:'D', 7:'S', 8:'S', 9:'H', 10:'H', 11:'H' },
+            8: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'S', 8:'S', 9:'S', 10:'S', 11:'S' },
+            9: { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'S', 8:'S', 9:'S', 10:'S', 11:'S' }
+        };
+
+        const pairStrategy = {
+            'A':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P', 8:'P', 9:'P', 10:'P', 11:'P' },
+            '10': { 2:'S', 3:'S', 4:'S', 5:'S', 6:'S', 7:'S', 8:'S', 9:'S', 10:'S', 11:'S' },
+            '9':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'S', 8:'P', 9:'P', 10:'S', 11:'S' },
+            '8':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P', 8:'P', 9:'P', 10:'P', 11:'P' },
+            '7':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P', 8:'H', 9:'H', 10:'H', 11:'H' },
+            '6':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            '5':  { 2:'D', 3:'D', 4:'D', 5:'D', 6:'D', 7:'D', 8:'D', 9:'D', 10:'H', 11:'H' },
+            '4':  { 2:'H', 3:'H', 4:'H', 5:'P', 6:'P', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H' },
+            '3':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P', 8:'H', 9:'H', 10:'H', 11:'H' },
+            '2':  { 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P', 8:'H', 9:'H', 10:'H', 11:'H' }
+        };
+
+        const actionText = {
+            'H': 'CHIAMA (Hit)',
+            'S': 'STAI (Stand)',
+            'D': 'RADDOPPIA (Double)',
+            'P': 'DIVIDI (Split)',
+            'RH': 'RESA (Surrender)',
+            'INS': 'ASSICURAZIONE'
+        };
+
+        function updateSettings() {
+            tableSettings.soft17Rule = document.getElementById('settingSoft17').value;
+            tableSettings.surrenderAllowed = document.getElementById('settingSurrender').value === 'true';
+            tableSettings.dasAllowed = document.getElementById('settingDAS').value === 'true';
+            
+            document.getElementById('trainerSurrenderBtn').style.display = tableSettings.surrenderAllowed ? 'block' : 'none';
+            calculateMove();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabName === 'assistant') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-assistant').classList.add('active');
+            } else if (tabName === 'trainer') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-trainer').classList.add('active');
+                generateTrainerScenario();
+            } else {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab-settings').classList.add('active');
+            }
+        }
+
+        function registerCountCard(type) {
+            if (type === 'low') runningCount += 1;
+            if (type === 'high') runningCount -= 1;
+            updateCountDisplay();
+            calculateMove();
+        }
+
+        function resetCount() {
+            runningCount = 0;
+            updateCountDisplay();
+            calculateMove();
+        }
+
+        function getTrueCount() {
+            const decksLeft = parseFloat(document.getElementById('decksLeft').value);
+            return runningCount / decksLeft;
+        }
+
+        function updateCountDisplay() {
+            document.getElementById('runningCountDisplay').innerText = (runningCount > 0 ? '+' : '') + runningCount;
+            const tc = getTrueCount();
+            const tcDisplay = document.getElementById('trueCountDisplay');
+            tcDisplay.innerText = (tc > 0 ? '+' : '') + tc.toFixed(1);
+
+            if (tc >= 2) tcDisplay.style.color = '#4caf50';
+            else if (tc <= -1) tcDisplay.style.color = '#e53935';
+            else tcDisplay.style.color = '#00bcd4';
+        }
+
+        function addCard(card) {
+            playerCards.push(card);
+            if (['2','3','4','5','6'].includes(card)) runningCount += 1;
+            if (['10','A'].includes(card)) runningCount -= 1;
+            
+            updateCountDisplay();
+            updateHandDisplay();
+            calculateMove();
+        }
+
+        function resetHand() {
+            playerCards = [];
+            updateHandDisplay();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = "Seleziona le carte per iniziare";
+            resultDiv.className = '';
+            document.getElementById('deviation-note').innerText = '';
+        }
+
+        function updateHandDisplay() {
+            const display = document.getElementById('handDisplay');
+            display.innerText = playerCards.length === 0 ? "Mano: nessuna carta" : "Mano: " + playerCards.join(" - ");
+        }
+
+        function evaluateHand(cards) {
+            let total = 0;
+            let aces = 0;
+
+            for (let card of cards) {
+                if (card === 'A') { aces += 1; total += 11; } 
+                else { total += parseInt(card); }
+            }
+
+            while (total > 21 && aces > 0) {
+                total -= 10;
+                aces -= 1;
+            }
+
+            return { total, isSoft: (aces > 0) };
+        }
+
+        // CALCULATE MOVE CON REGOLE TAVOLO
+        function getCorrectMove(dealerCard, cards, tc = 0) {
+            const handInfo = evaluateHand(cards);
+            const total = handInfo.total;
+            const isSoft = handInfo.isSoft;
+
+            // 1. Controllo Surrender (Solo sulle prime 2 carte)
+            if (tableSettings.surrenderAllowed && cards.length === 2) {
+                if (total === 16 && [9, 10, 11].includes(dealerCard)) return 'RH';
+                if (total === 15 && dealerCard === 10) return 'RH';
+                if (tableSettings.soft17Rule === 'H17' && total === 15 && dealerCard === 11) return 'RH';
+            }
+
+            // 2. Deviazioni Conteggio
+            if (dealerCard === 11 && tc >= 3) return 'INS';
+            if (total === 16 && !isSoft && dealerCard === 10 && tc >= 0) return 'S';
+
+            // 3. Split
+            if (cards.length === 2 && cards[0] === cards[1]) {
+                return pairStrategy[cards[0]][dealerCard];
+            } 
+            // 4. Soft
+            else if (isSoft && cards.length === 2) {
+                const otherCard = total - 11;
+                let move = softStrategy[otherCard][dealerCard];
+                if (tableSettings.soft17Rule === 'H17' && otherCard === 8 && dealerCard === 6) move = 'D';
+                return move;
+            }
+            // 5. Hard
+            else {
+                if (total <= 8) return 'H';
+                if (total >= 17) return 'S';
+                let moveCode = hardStrategy[total][dealerCard];
+                if (moveCode === 'D' && cards.length > 2) moveCode = 'H';
+                return moveCode;
+            }
+        }
+
+        function calculateMove() {
+            if (playerCards.length === 0) return;
+
+            const dealerCard = parseInt(document.getElementById('dealer').value);
+            const handInfo = evaluateHand(playerCards);
+            if (handInfo.total > 21) {
+                renderResult("SBALLATO!", "STAND", "");
+                return;
+            }
+
+            const moveCode = getCorrectMove(dealerCard, playerCards, getTrueCount());
+            renderResult(actionText[moveCode], moveCode, "");
+        }
+
+        function renderResult(text, code, note) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = text;
+            resultDiv.className = '';
+            
+            if (code === 'H') resultDiv.classList.add('HIT');
+            if (code === 'S') resultDiv.classList.add('STAND');
+            if (code === 'D') resultDiv.classList.add('DOUBLE');
+            if (code === 'P') resultDiv.classList.add('SPLIT');
+            if (code === 'RH') resultDiv.classList.add('SURRENDER');
+            if (code === 'INS') resultDiv.classList.add('INSURANCE');
+
+            document.getElementById('deviation-note').innerText = note;
+        }
+
+        const availableCards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A'];
+
+        function getRandomCard() {
+            return availableCards[Math.floor(Math.random() * availableCards.length)];
+        }
+
+        function generateTrainerScenario() {
+            const card1 = getRandomCard();
+            const card2 = getRandomCard();
+            const dealerCardStr = getRandomCard();
+
+            const dealerVal = dealerCardStr === 'A' ? 11 : parseInt(dealerCardStr);
+            const playerHand = [card1, card2];
+
+            const correctAction = getCorrectMove(dealerVal, playerHand, 0);
+
+            currentTrainerScenario = {
+                dealerVal: dealerVal,
+                playerCards: playerHand,
+                correctAction: correctAction
+            };
+
+            document.getElementById('trainerDealerCard').innerText = dealerCardStr;
+            document.getElementById('trainerPlayerHand').innerText = playerHand.join(" - ");
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('feedback').className = '';
+        }
+
+        function checkUserChoice(userChoice) {
+            if (!currentTrainerScenario.correctAction) return;
+
+            const feedbackDiv = document.getElementById('feedback');
+            const isCorrect = userChoice === currentTrainerScenario.correctAction;
+
+            if (isCorrect) {
+                correctAnswers++;
+                feedbackDiv.innerText = "CORRETTO! " + actionText[currentTrainerScenario.correctAction];
+                feedbackDiv.className = "feedback-correct";
+            } else {
+                wrongAnswers++;
+                feedbackDiv.innerText = "SBAGLIATO! La risposta corretta era: " + actionText[currentTrainerScenario.correctAction];
+                feedbackDiv.className = "feedback-wrong";
+            }
+
+            updateTrainerStats();
+
+            setTimeout(() => {
+                generateTrainerScenario();
+            }, 1200);
+        }
+
+        function updateTrainerStats() {
+            document.getElementById('scoreCorrect').innerText = correctAnswers;
+            document.getElementById('scoreWrong').innerText = wrongAnswers;
+            
+            const total = correctAnswers + wrongAnswers;
+            const accuracy = total === 0 ? 100 : Math.round((correctAnswers / total) * 100);
+            document.getElementById('scoreAccuracy').innerText = accuracy + "%";
+        }
+
+        // Inizializza pulsanti al caricamento
+        updateSettings();
+    </script>
+<script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Service Worker registrato!'))
+          .catch((err) => console.log('Errore Service Worker:', err));
+      }
+    </script>
+</body>
+</html>
