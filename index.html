@@ -3,30 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - 7 Seats Engine</title>
+    <title>Blackjack Pro - Bankroll & 7 Seats</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        h1 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
+        h1 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
 
-        /* Sfondo e Layout Tavolo Verde a 7 posti */
+        /* Sfondo e Layout Tavolo Verde a 7 posti (Invertito: P1 a destra) */
         .felt-table { 
             width: 100%; 
             max-width: 500px; 
             background: radial-gradient(circle, #2d6a4f 0%, #1b4332 70%, #081c15 100%); 
             border: 3px solid #d4af37; 
             border-radius: 15px 15px 160px 160px; 
-            padding: 10px 4px 25px 4px; 
+            padding: 10px 4px 22px 4px; 
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 6px 15px rgba(0,0,0,0.6); 
             margin-bottom: 6px; 
         }
 
         /* Area Dealer */
-        .dealer-area { text-align: center; margin-bottom: 8px; }
-        .dealer-card-slot { display: inline-flex; justify-content: center; min-width: 40px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
+        .dealer-area { text-align: center; margin-bottom: 6px; }
+        .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
 
-        /* Griglia a 7 Postazioni */
-        .seats-container { display: flex; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
+        /* Griglia a 7 Postazioni invertite */
+        .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
         .seat { 
             width: 62px; 
             background: rgba(0,0,0,0.45); 
@@ -45,42 +45,46 @@
         /* Tag Carte */
         .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #000; line-height: 1.1; }
 
-        /* Output Decisione */
+        /* Output Decisione e Risultato */
         .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 6px; }
         .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
-        .decision-text { font-size: 1.4rem; font-weight: 900; color: #74c69d; }
+        .decision-text { font-size: 1.3rem; font-weight: 900; color: #74c69d; }
         .deviation-note { font-size: 0.68rem; color: #d4af37; font-weight: bold; }
+        .outcome-text { font-size: 1.1rem; font-weight: 900; margin-top: 2px; }
 
-        /* Stats */
-        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.72rem; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 6px; margin-bottom: 6px; }
+        /* Dashboard Financial & Stats */
+        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.7rem; background: rgba(0,0,0,0.6); padding: 5px 8px; border-radius: 6px; margin-bottom: 6px; }
         .stat-val { color: #d4af37; font-weight: bold; }
+        .profit-pos { color: #52b788; font-weight: bold; }
+        .profit-neg { color: #e63946; font-weight: bold; }
 
         /* Tastierino Carte */
         .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 500px; margin-bottom: 6px; }
-        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 10px 0; border-radius: 6px; cursor: pointer; text-align: center; }
+        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 9px 0; border-radius: 6px; cursor: pointer; text-align: center; }
         .key-btn:active { background: #d4af37; color: black; }
         .key-btn.asso { background: #d4af37; color: black; }
 
         /* Bottoni Azioni */
         .actions-row { display: flex; gap: 6px; width: 100%; max-width: 500px; margin-top: auto; }
-        .act-btn { flex: 1; padding: 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
+        .act-btn { flex: 1; padding: 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; text-transform: uppercase; }
         .btn-reset { background: #e63946; color: white; }
         .btn-next { background: #457b9d; color: white; }
+        .btn-resolve { background: #2a9d8f; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>Blackjack Pro - 7 Seats Engine</h1>
+    <h1>Blackjack Pro - Real Table & Budget Engine</h1>
 
-    <!-- Tavolo Semicircolare Verde -->
+    <!-- Tavolo Semicircolare Verde (Postazioni ordinate da Destra a Sinistra) -->
     <div class="felt-table">
         <!-- Dealer -->
         <div class="dealer-area">
-            <div class="seat-title">Mazziere</div>
+            <div class="seat-title" id="dealerTitle">Mazziere (0)</div>
             <div id="dealerSlot" class="dealer-card-slot" onclick="selectTarget('DEALER')"></div>
         </div>
 
-        <!-- 7 Postazioni Giocatori -->
+        <!-- 7 Postazioni Giocatori (Da Destra P1 a Sinistra P7) -->
         <div class="seats-container">
             <div id="seat1" class="seat" onclick="selectTarget('SEAT1')">
                 <div class="seat-title" id="st1">P1</div>
@@ -113,18 +117,20 @@
         </div>
     </div>
 
-    <!-- Output Decisione -->
+    <!-- Output Decisione e Risultato Mano -->
     <div class="decision-box">
-        <div class="decision-title">Azione Consigliata per Te</div>
-        <div id="decisionOutput" class="decision-text">SELEZIONA SCHERMO</div>
+        <div class="decision-title">Consiglio / Esito Mano</div>
+        <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
         <div id="deviationNote" class="deviation-note"></div>
+        <div id="outcomeDisplay" class="outcome-text"></div>
     </div>
 
-    <!-- Statistiche Hi-Lo -->
+    <!-- Statistiche Hi-Lo & Budget -->
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
-        <div>Puntata: <span id="betVal" class="stat-val">1 Unit</span></div>
-        <div>RC: <span id="rcVal" class="stat-val">0</span></div>
+        <div>Puntata: <span id="betVal" class="stat-val">10€</span></div>
+        <div>Profitto: <span id="profitVal" class="profit-pos">0€</span></div>
+        <div>Bankroll: <span id="bankrollVal" class="stat-val">500€</span></div>
     </div>
 
     <!-- Tastierino Carte -->
@@ -141,25 +147,35 @@
         <button class="key-btn asso" onclick="inputCard('A')">A</button>
     </div>
 
-    <!-- Gestione del Turno -->
+    <!-- Gestione Turni e Risoluzione -->
     <div class="actions-row">
+        <button class="act-btn btn-resolve" onclick="resolveHand()">Calcola Risultato</button>
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
         <button class="act-btn btn-reset" onclick="resetAll()">Reset Mazzo</button>
     </div>
 
     <script>
-        let dealerCard = null;
+        let dealerCards = [];
         let seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
-        let userSeatKey = 'SEAT4'; // Posizione predefinita al centro del tavolo
+        let userSeatKey = 'SEAT4';
         let activeTargetKey = 'DEALER';
         
+        // Contatori
         let runningCount = 0;
         let totalCardsSeen = 0;
         const totalDecks = 6;
         let currentTrueCount = 0;
 
+        // Gestione Budget e Profitto
+        const unitSize = 10; // Valore della Singola Unità (es. 10€)
+        let initialBankroll = 500;
+        let currentBankroll = 500;
+        let netProfit = 0;
+        let currentBet = 10;
+        let handResolved = false;
+        let lastActionRecommended = "CHIEDI";
+
         function selectTarget(key) {
-            // Un tap seleziona dove inserire le carte. Un doppio tap assegna l'etichetta "IO".
             if (key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
                 userSeatKey = key;
             }
@@ -171,8 +187,7 @@
             updateCount(val);
 
             if (activeTargetKey === 'DEALER') {
-                dealerCard = val;
-                activeTargetKey = 'SEAT1';
+                dealerCards.push(val);
             } else {
                 seats[activeTargetKey].push(val);
             }
@@ -187,19 +202,19 @@
             const remainingDecks = Math.max(0.5, totalDecks - (totalCardsSeen / 52));
             currentTrueCount = runningCount / remainingDecks;
             
-            document.getElementById('rcVal').innerText = runningCount;
-            document.getElementById('tcVal').innerText = currentTrueCount.toFixed(1);
+            // Calcolo Unità di puntata in base al TC
+            let units = 1;
+            if (currentTrueCount >= 2) units = Math.floor(currentTrueCount);
+            currentBet = units * unitSize;
 
-            let bet = 1;
-            if (currentTrueCount >= 2) bet = Math.floor(currentTrueCount);
-            document.getElementById('betVal').innerText = `${bet} Unit${bet > 1 ? 's' : ''}`;
+            document.getElementById('tcVal').innerText = currentTrueCount.toFixed(1);
+            document.getElementById('betVal').innerText = `${currentBet}€`;
         }
 
-        function getUserHandInfo() {
-            const userCards = seats[userSeatKey];
+        function calculateHandTotal(cardsArr) {
             let total = 0;
             let aceCount = 0;
-            userCards.forEach(c => {
+            cardsArr.forEach(c => {
                 if (c === 'A') { aceCount++; total += 11; }
                 else if (['J','Q','K','10'].includes(c)) total += 10;
                 else total += parseInt(c);
@@ -210,10 +225,7 @@
                 aceCount--;
             }
 
-            const isSoft = aceCount > 0;
-            const isPair = userCards.length === 2 && getBaseValue(userCards[0]) === getBaseValue(userCards[1]);
-            
-            return { total, isSoft, isPair, busted: total > 21, count: userCards.length };
+            return { total, isSoft: aceCount > 0, busted: total > 21, isBlackjack: cardsArr.length === 2 && total === 21 };
         }
 
         function getBaseValue(c) {
@@ -224,72 +236,113 @@
 
         function calculateStrategy() {
             const userCards = seats[userSeatKey];
-            if (!dealerCard || userCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e tua mano" };
+            if (dealerCards.length === 0 || userCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e tua mano" };
 
-            const info = getUserHandInfo();
-            const dVal = getBaseValue(dealerCard);
+            const info = calculateHandTotal(userCards);
+            const dVal = getBaseValue(dealerCards[0]);
             const tc = currentTrueCount;
 
             if (info.busted) return { action: "SBALLATO!", note: "" };
-            if (info.total === 21) return { action: "STAI", note: "Blackjack / 21" };
+            if (info.isBlackjack) return { action: "BLACKJACK!", note: "Paga 3 a 2" };
 
-            let insuranceNote = (dVal === 11 && tc >= 3) ? "⚠️ PRENDI ASSICURAZIONE (TC >= +3)" : "";
+            let insuranceNote = (dVal === 11 && tc >= 3) ? "⚠️ PRENDI ASSICURAZIONE" : "";
 
-            // --- DEVIAZIONI DI DIVISIONE & RADDOPPIO ---
-            // Divisione Coppia di 10 (10-10 vs 5/6)
-            if (info.isPair && getBaseValue(userCards[0]) === 10) {
-                if (dVal === 6 && tc >= 5) return { action: "DIVIDI", note: "Deviazione Hi-Lo (TC >= +5)" };
-                if (dVal === 5 && tc >= 6) return { action: "DIVIDI", note: "Deviazione Hi-Lo (TC >= +6)" };
-                return { action: "STAI", note: insuranceNote };
-            }
+            // Deviazioni Illustrious 18
+            if (userCards.length === 2 && info.total === 16 && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
+            if (userCards.length === 2 && info.total === 15 && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
+            if (userCards.length === 2 && info.total === 12 && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
+            if (userCards.length === 2 && info.total === 12 && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
 
-            // Raddoppio 11 duro vs Asso
-            if (info.total === 11 && info.count === 2 && dVal === 11) {
-                if (tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
-                return { action: "CHIEDI", note: insuranceNote };
-            }
+            // Deviazioni Raddoppio
+            if (info.total === 11 && userCards.length === 2 && dVal === 11 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
+            if (info.total === 10 && userCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
 
-            // Raddoppio 10 duro vs 10 o Asso
-            if (info.total === 10 && info.count === 2 && (dVal === 10 || dVal === 11)) {
-                if (tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
-                return { action: "CHIEDI", note: insuranceNote };
-            }
-
-            // Raddoppio 9 duro vs 2 o 7
-            if (info.total === 9 && info.count === 2) {
-                if (dVal === 2 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
-                if (dVal === 7 && tc >= 3) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +3)" };
-            }
-
-            // Deviazioni di Stai/Chiedi (Fab 4 & Illustrious 18)
-            if (info.total === 16 && !info.isSoft && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
-            if (info.total === 15 && !info.isSoft && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
-            if (info.total === 12 && !info.isSoft && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
-            if (info.total === 12 && !info.isSoft && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
-
-            // --- STRATEGIA BASE ---
-            if (info.isPair) {
+            // Strategia Base
+            if (userCards.length === 2 && getBaseValue(userCards[0]) === getBaseValue(userCards[1])) {
                 const pVal = getBaseValue(userCards[0]);
                 if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
                 if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
-                if (pVal === 7 || pVal === 6) return { action: dVal <= 7 ? "DIVIDI" : "CHIEDI", note: insuranceNote };
-                if (pVal === 2 || pVal === 3) return { action: dVal <= 7 ? "DIVIDI" : "CHIEDI", note: insuranceNote };
             }
 
             if (info.total >= 17 && !info.isSoft) return { action: "STAI", note: insuranceNote };
             if (info.total >= 13 && info.total <= 16 && !info.isSoft) return { action: (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
             if (info.total === 12 && !info.isSoft) return { action: (dVal >= 4 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
-            if (info.total === 11) return { action: (info.count === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
-            if (info.total === 10) return { action: (info.count === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
-            if (info.total === 9) return { action: (info.count === 2 && dVal >= 3 && dVal <= 6) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 11) return { action: (userCards.length === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 10) return { action: (userCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
 
             return { action: "CHIEDI", note: insuranceNote };
         }
 
+        function resolveHand() {
+            if (handResolved) return;
+
+            const userCards = seats[userSeatKey];
+            if (dealerCards.length === 0 || userCards.length < 2) {
+                alert("Inserisci prima le carte per te e per il mazziere!");
+                return;
+            }
+
+            const userRes = calculateHandTotal(userCards);
+            const dealerRes = calculateHandTotal(dealerCards);
+            let outcomeTxt = "";
+            let winAmount = 0;
+
+            // Raddoppio effettivo se suggerito o eseguito
+            let betMultiplier = (lastActionRecommended === "RADDOPPIA") ? 2 : 1;
+            let actualBet = currentBet * betMultiplier;
+
+            if (userRes.busted) {
+                outcomeTxt = `HAI PERSO ❌ (-${actualBet}€)`;
+                winAmount = -actualBet;
+            } else if (userRes.isBlackjack) {
+                if (dealerRes.isBlackjack) {
+                    outcomeTxt = "PARITÀ / PUSH 🤝 (0€)";
+                    winAmount = 0;
+                } else {
+                    let bjPayout = actualBet * 1.5;
+                    outcomeTxt = `BLACKJACK! 🎉 (+${bjPayout}€)`;
+                    winAmount = bjPayout;
+                }
+            } else if (dealerRes.busted) {
+                outcomeTxt = `IL MAZZIERE SBALLA! VINCI 🎉 (+${actualBet}€)`;
+                winAmount = actualBet;
+            } else if (userRes.total > dealerRes.total) {
+                outcomeTxt = `HAI VINTO! 🎉 (+${actualBet}€)`;
+                winAmount = actualBet;
+            } else if (userRes.total < dealerRes.total) {
+                outcomeTxt = `HAI PERSO ❌ (-${actualBet}€)`;
+                winAmount = -actualBet;
+            } else {
+                outcomeTxt = "PARITÀ / PUSH 🤝 (0€)";
+                winAmount = 0;
+            }
+
+            currentBankroll += winAmount;
+            netProfit += winAmount;
+            handResolved = true;
+
+            const outcomeEl = document.getElementById('outcomeDisplay');
+            outcomeEl.innerText = outcomeTxt;
+            outcomeEl.style.color = winAmount > 0 ? "#52b788" : (winAmount < 0 ? "#e63946" : "#d4af37");
+
+            updateFinancials();
+        }
+
+        function updateFinancials() {
+            document.getElementById('bankrollVal').innerText = `${currentBankroll}€`;
+            const profitEl = document.getElementById('profitVal');
+            profitEl.innerText = `${netProfit >= 0 ? '+' : ''}${netProfit}€`;
+            profitEl.className = netProfit >= 0 ? "profit-pos" : "profit-neg";
+        }
+
         function updateUI() {
+            // Render Dealer Cards
             const dSlot = document.getElementById('dealerSlot');
-            dSlot.innerHTML = dealerCard ? `<span class="card-tag">${dealerCard}</span>` : '';
-            
+            const dInfo = calculateHandTotal(dealerCards);
+            dSlot.innerHTML = dealerCards.map(c => `<span class="card-tag">${c}</span>`).join('');
+            document.getElementById('dealerTitle').innerText = `Mazziere (${dInfo.total})`;
+
+            // Render Seats
             for (let i = 1; i <= 7; i++) {
                 const key = `SEAT${i}`;
                 const seatEl = document.getElementById(`seat${i}`);
@@ -304,28 +357,38 @@
                 cardsEl.innerHTML = seats[key].map(c => `<span class="card-tag">${c}</span>`).join('');
             }
 
-            const res = calculateStrategy();
-            document.getElementById('decisionOutput').innerText = res.action;
-            document.getElementById('deviationNote').innerText = res.note;
+            // Strat Output
+            if (!handResolved) {
+                const res = calculateStrategy();
+                lastActionRecommended = res.action;
+                document.getElementById('decisionOutput').innerText = res.action;
+                document.getElementById('deviationNote').innerText = res.note;
+            }
         }
 
         function nextHand() {
-            dealerCard = null;
+            dealerCards = [];
             seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
             activeTargetKey = 'DEALER';
+            handResolved = false;
+            document.getElementById('outcomeDisplay').innerText = "";
             updateUI();
         }
 
         function resetAll() {
-            if (confirm("Reset completo del mazzo e dei conteggi?")) {
+            if (confirm("Reset del mazzo, dei conteggi e del budget?")) {
                 runningCount = 0;
                 totalCardsSeen = 0;
                 currentTrueCount = 0;
+                currentBankroll = initialBankroll;
+                netProfit = 0;
+                updateFinancials();
                 nextHand();
             }
         }
 
         updateUI();
+        updateFinancials();
     </script>
 </body>
 </html>
