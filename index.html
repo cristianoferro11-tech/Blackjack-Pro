@@ -3,95 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Assistant V2</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1b4332">
+    <title>Blackjack Pro - 7 Seats Engine</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #0f281e; color: #ffffff; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        h1 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 8px; text-align: center; }
+        body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        h1 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
 
-        /* Contenitore Tavolo */
-        .table-container { width: 100%; max-width: 450px; background: #1b4332; border: 3px solid #d4af37; border-radius: 20px; padding: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); margin-bottom: 10px; }
-        
-        /* Sezione Mazziere */
-        .dealer-box { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 8px; border: 1px solid rgba(212,175,55,0.3); }
-        .box-title { font-size: 0.7rem; color: #d4af37; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
-        
-        /* Carte Visibili */
-        .cards-display { display: flex; justify-content: center; gap: 4px; min-height: 35px; margin-top: 2px; flex-wrap: wrap; align-items: center; }
-        .card-tag { background: white; color: black; font-weight: 900; padding: 4px 8px; border-radius: 4px; font-size: 1rem; border: 1px solid #333; line-height: 1; }
-        .card-tag.red { color: #d62828; }
+        /* Sfondo e Layout Tavolo Verde a 7 posti */
+        .felt-table { 
+            width: 100%; 
+            max-width: 500px; 
+            background: radial-gradient(circle, #2d6a4f 0%, #1b4332 70%, #081c15 100%); 
+            border: 3px solid #d4af37; 
+            border-radius: 15px 15px 160px 160px; 
+            padding: 10px 4px 25px 4px; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 6px 15px rgba(0,0,0,0.6); 
+            margin-bottom: 6px; 
+        }
 
-        /* Area Giocatore Centrale */
-        .user-active-area { text-align: center; margin: 10px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .user-total { font-size: 0.9rem; color: #fff; font-weight: bold; margin-bottom: 2px; }
+        /* Area Dealer */
+        .dealer-area { text-align: center; margin-bottom: 8px; }
+        .dealer-card-slot { display: inline-flex; justify-content: center; min-width: 40px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
+
+        /* Griglia a 7 Postazioni */
+        .seats-container { display: flex; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
+        .seat { 
+            width: 62px; 
+            background: rgba(0,0,0,0.45); 
+            border: 1px solid rgba(212,175,55,0.4); 
+            border-radius: 8px; 
+            padding: 3px 1px; 
+            text-align: center; 
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .seat.active { border: 2px solid #38b000; background: rgba(56,176,0,0.2); }
+        .seat.user-seat { border: 2px solid #d4af37; background: rgba(212,175,55,0.3); box-shadow: 0 0 8px rgba(212,175,55,0.6); }
+        .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
+        .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; min-height: 26px; }
+
+        /* Tag Carte */
+        .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #000; line-height: 1.1; }
 
         /* Output Decisione */
-        .decision-box { width: 100%; max-width: 450px; background: #000000; border: 2px solid #d4af37; border-radius: 15px; padding: 12px; text-align: center; margin-bottom: 10px; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
-        .decision-title { font-size: 0.7rem; text-transform: uppercase; color: #aaa; margin-bottom: 2px; }
-        .decision-text { font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; color: #74c69d; }
-        
-        /* Stats & Conteggio */
-        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 450px; font-size: 0.75rem; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 8px; margin-bottom: 10px; }
-        .stat-val { color: #d4af37; font-weight: bold; margin-left: 2px; }
+        .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 6px; }
+        .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
+        .decision-text { font-size: 1.4rem; font-weight: 900; color: #74c69d; }
+        .deviation-note { font-size: 0.68rem; color: #d4af37; font-weight: bold; }
 
-        /* Tastierino Digitazione Carte */
-        .input-selector { display: flex; gap: 5px; width: 100%; max-width: 450px; margin-bottom: 6px; }
-        .selector-btn { flex: 1; background: #212529; border: 2px solid #495057; color: white; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; cursor: pointer; text-align: center; }
-        .selector-btn.active { border-color: #d4af37; background: #1b4332; color: #d4af37; }
-        
-        .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 100%; max-width: 450px; margin-bottom: 10px; }
-        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.2rem; font-weight: 900; padding: 15px 0; border-radius: 8px; cursor: pointer; text-align: center; }
-        .key-btn:active { background: #d4af37; color: black; border-color: white; }
-        .key-btn.asso { background: #d4af37; color: black; border-color: white; }
+        /* Stats */
+        .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.72rem; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 6px; margin-bottom: 6px; }
+        .stat-val { color: #d4af37; font-weight: bold; }
 
-        /* Bottoni di Gestione */
-        .actions-row { display: flex; gap: 8px; width: 100%; max-width: 450px; margin-top: auto; padding-bottom: 10px; }
-        .act-btn { flex: 1; padding: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; }
+        /* Tastierino Carte */
+        .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 500px; margin-bottom: 6px; }
+        .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 10px 0; border-radius: 6px; cursor: pointer; text-align: center; }
+        .key-btn:active { background: #d4af37; color: black; }
+        .key-btn.asso { background: #d4af37; color: black; }
+
+        /* Bottoni Azioni */
+        .actions-row { display: flex; gap: 6px; width: 100%; max-width: 500px; margin-top: auto; }
+        .act-btn { flex: 1; padding: 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
         .btn-reset { background: #e63946; color: white; }
         .btn-next { background: #457b9d; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>BJ Table Assistant V2</h1>
+    <h1>Blackjack Pro - 7 Seats Engine</h1>
 
-    <!-- Selezione Postazioni Tavolo -->
-    <div class="table-container">
-        <div class="dealer-box">
-            <div class="box-title">Carta Mazziere</div>
-            <div id="dealerCardDisplay" class="cards-display"></div>
+    <!-- Tavolo Semicircolare Verde -->
+    <div class="felt-table">
+        <!-- Dealer -->
+        <div class="dealer-area">
+            <div class="seat-title">Mazziere</div>
+            <div id="dealerSlot" class="dealer-card-slot" onclick="selectTarget('DEALER')"></div>
         </div>
 
-        <div class="user-active-area">
-            <div class="box-title">Tua Mano (IO)</div>
-            <div id="userTotalDisplay" class="user-total">Totale: 0</div>
-            <div id="userCardsDisplay" class="cards-display"></div>
+        <!-- 7 Postazioni Giocatori -->
+        <div class="seats-container">
+            <div id="seat1" class="seat" onclick="selectTarget('SEAT1')">
+                <div class="seat-title" id="st1">P1</div>
+                <div class="seat-cards" id="sc1"></div>
+            </div>
+            <div id="seat2" class="seat" onclick="selectTarget('SEAT2')">
+                <div class="seat-title" id="st2">P2</div>
+                <div class="seat-cards" id="sc2"></div>
+            </div>
+            <div id="seat3" class="seat" onclick="selectTarget('SEAT3')">
+                <div class="seat-title" id="st3">P3</div>
+                <div class="seat-cards" id="sc3"></div>
+            </div>
+            <div id="seat4" class="seat user-seat" onclick="selectTarget('SEAT4')">
+                <div class="seat-title" id="st4">IO (P4)</div>
+                <div class="seat-cards" id="sc4"></div>
+            </div>
+            <div id="seat5" class="seat" onclick="selectTarget('SEAT5')">
+                <div class="seat-title" id="st5">P5</div>
+                <div class="seat-cards" id="sc5"></div>
+            </div>
+            <div id="seat6" class="seat" onclick="selectTarget('SEAT6')">
+                <div class="seat-title" id="st6">P6</div>
+                <div class="seat-cards" id="sc6"></div>
+            </div>
+            <div id="seat7" class="seat" onclick="selectTarget('SEAT7')">
+                <div class="seat-title" id="st7">P7</div>
+                <div class="seat-cards" id="sc7"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Riquadro Decisione Istantanea -->
+    <!-- Output Decisione -->
     <div class="decision-box">
-        <div class="decision-title">Azione Consigliata</div>
-        <div id="decisionOutput" class="decision-text">INSERISCI</div>
+        <div class="decision-title">Azione Consigliata per Te</div>
+        <div id="decisionOutput" class="decision-text">SELEZIONA SCHERMO</div>
+        <div id="deviationNote" class="deviation-note"></div>
     </div>
 
-    <!-- Statistiche e Conteggio Hi-Lo -->
+    <!-- Statistiche Hi-Lo -->
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
         <div>Puntata: <span id="betVal" class="stat-val">1 Unit</span></div>
         <div>RC: <span id="rcVal" class="stat-val">0</span></div>
     </div>
 
-    <!-- Selettore Destinazione Input -->
-    <div class="input-selector">
-        <button id="selectorDealer" class="selector-btn active" onclick="setInputState('DEALER')">Mazziere</button>
-        <button id="selectorUser" class="selector-btn" onclick="setInputState('USER')">Io (Mia Mano)</button>
-        <button id="selectorTable" class="selector-btn" onclick="setInputState('TABLE')" style="border-color:#d4af37; color:#d4af37;">Tavolo (Altri)</button>
-    </div>
-
-    <!-- Tastierino Selezione Carte -->
+    <!-- Tastierino Carte -->
     <div class="keypad">
         <button class="key-btn" onclick="inputCard('2')">2</button>
         <button class="key-btn" onclick="inputCard('3')">3</button>
@@ -105,71 +141,62 @@
         <button class="key-btn asso" onclick="inputCard('A')">A</button>
     </div>
 
-    <!-- Bottoni di Gestione -->
+    <!-- Gestione del Turno -->
     <div class="actions-row">
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
         <button class="act-btn btn-reset" onclick="resetAll()">Reset Mazzo</button>
     </div>
 
     <script>
-        // Stato dell'applicazione
         let dealerCard = null;
-        let userCards = [];
+        let seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
+        let userSeatKey = 'SEAT4'; // Posizione predefinita al centro del tavolo
+        let activeTargetKey = 'DEALER';
+        
         let runningCount = 0;
         let totalCardsSeen = 0;
         const totalDecks = 6;
-        let inputState = 'DEALER'; // DEALER, USER, TABLE
+        let currentTrueCount = 0;
 
-        // Gestione Stato Input
-        function setInputState(state) {
-            inputState = state;
-            // Aggiorna UI selettori
-            document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
-            if (state === 'DEALER') document.getElementById('selectorDealer').classList.add('active');
-            if (state === 'USER') document.getElementById('selectorUser').classList.add('active');
-            if (state === 'TABLE') document.getElementById('selectorTable').classList.add('active');
-        }
-
-        // Inserimento carte
-        function inputCard(val) {
-            // 1. Aggiorna il conteggio (Hi-Lo e carte viste totali)
-            updateCount(val);
-
-            // 2. Gestisci dove assegnare la carta
-            if (inputState === 'DEALER') {
-                dealerCard = val;
-                setInputState('USER'); // Passa automaticamente all'utente
-            } else if (inputState === 'USER') {
-                userCards.push(val);
-            } else if (inputState === 'TABLE') {
-                // Le carte del tavolo sono già state contate in updateCount,
-                // non serve salvarle in array specifici per la strategia dell'utente.
+        function selectTarget(key) {
+            // Un tap seleziona dove inserire le carte. Un doppio tap assegna l'etichetta "IO".
+            if (key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
+                userSeatKey = key;
             }
-            
-            // 3. Aggiorna l'interfaccia
+            activeTargetKey = key;
             updateUI();
         }
 
-        // Calcolo Hi-Lo e Puntata
+        function inputCard(val) {
+            updateCount(val);
+
+            if (activeTargetKey === 'DEALER') {
+                dealerCard = val;
+                activeTargetKey = 'SEAT1';
+            } else {
+                seats[activeTargetKey].push(val);
+            }
+            updateUI();
+        }
+
         function updateCount(card) {
             totalCardsSeen++;
             if (['2','3','4','5','6'].includes(card)) runningCount++;
             else if (['10','J','Q','K','A'].includes(card)) runningCount--;
             
             const remainingDecks = Math.max(0.5, totalDecks - (totalCardsSeen / 52));
-            const trueCount = runningCount / remainingDecks;
+            currentTrueCount = runningCount / remainingDecks;
             
             document.getElementById('rcVal').innerText = runningCount;
-            document.getElementById('tcVal').innerText = trueCount.toFixed(1);
+            document.getElementById('tcVal').innerText = currentTrueCount.toFixed(1);
 
-            // Suggerimento di puntata (semplice)
             let bet = 1;
-            if (trueCount >= 2) bet = Math.floor(trueCount);
+            if (currentTrueCount >= 2) bet = Math.floor(currentTrueCount);
             document.getElementById('betVal').innerText = `${bet} Unit${bet > 1 ? 's' : ''}`;
         }
 
-        // Calcolo Valore Mano Utente
         function getUserHandInfo() {
+            const userCards = seats[userSeatKey];
             let total = 0;
             let aceCount = 0;
             userCards.forEach(c => {
@@ -178,7 +205,6 @@
                 else total += parseInt(c);
             });
 
-            // Gestione Asso (Soft vs Hard)
             while (total > 21 && aceCount > 0) {
                 total -= 10;
                 aceCount--;
@@ -187,7 +213,7 @@
             const isSoft = aceCount > 0;
             const isPair = userCards.length === 2 && getBaseValue(userCards[0]) === getBaseValue(userCards[1]);
             
-            return { total, isSoft, isPair, busted: total > 21 };
+            return { total, isSoft, isPair, busted: total > 21, count: userCards.length };
         }
 
         function getBaseValue(c) {
@@ -196,103 +222,109 @@
             return parseInt(c);
         }
 
-        // Calcolo Strategia di Base (Con fix sballo)
         function calculateStrategy() {
-            if (!dealerCard || userCards.length < 2) return "INSERISCI";
+            const userCards = seats[userSeatKey];
+            if (!dealerCard || userCards.length < 2) return { action: "INSERISCI CARTE", note: "Imposta Dealer e tua mano" };
 
             const info = getUserHandInfo();
             const dVal = getBaseValue(dealerCard);
+            const tc = currentTrueCount;
 
-            // PRIORITY CHECK: SBALLO
-            if (info.busted) return "SBALLATO!";
+            if (info.busted) return { action: "SBALLATO!", note: "" };
+            if (info.total === 21) return { action: "STAI", note: "Blackjack / 21" };
 
-            // 21 Automatico
-            if (info.total === 21) return "STAI";
+            let insuranceNote = (dVal === 11 && tc >= 3) ? "⚠️ PRENDI ASSICURAZIONE (TC >= +3)" : "";
 
-            // Coppiologia / Dividi (Split)
+            // --- DEVIAZIONI DI DIVISIONE & RADDOPPIO ---
+            // Divisione Coppia di 10 (10-10 vs 5/6)
+            if (info.isPair && getBaseValue(userCards[0]) === 10) {
+                if (dVal === 6 && tc >= 5) return { action: "DIVIDI", note: "Deviazione Hi-Lo (TC >= +5)" };
+                if (dVal === 5 && tc >= 6) return { action: "DIVIDI", note: "Deviazione Hi-Lo (TC >= +6)" };
+                return { action: "STAI", note: insuranceNote };
+            }
+
+            // Raddoppio 11 duro vs Asso
+            if (info.total === 11 && info.count === 2 && dVal === 11) {
+                if (tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
+                return { action: "CHIEDI", note: insuranceNote };
+            }
+
+            // Raddoppio 10 duro vs 10 o Asso
+            if (info.total === 10 && info.count === 2 && (dVal === 10 || dVal === 11)) {
+                if (tc >= 4) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
+                return { action: "CHIEDI", note: insuranceNote };
+            }
+
+            // Raddoppio 9 duro vs 2 o 7
+            if (info.total === 9 && info.count === 2) {
+                if (dVal === 2 && tc >= 1) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
+                if (dVal === 7 && tc >= 3) return { action: "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +3)" };
+            }
+
+            // Deviazioni di Stai/Chiedi (Fab 4 & Illustrious 18)
+            if (info.total === 16 && !info.isSoft && dVal === 10 && tc >= 0) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= 0)" };
+            if (info.total === 15 && !info.isSoft && dVal === 10 && tc >= 4) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +4)" };
+            if (info.total === 12 && !info.isSoft && dVal === 2 && tc >= 3) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +3)" };
+            if (info.total === 12 && !info.isSoft && dVal === 3 && tc >= 2) return { action: "STAI", note: "Deviazione Hi-Lo (TC >= +2)" };
+
+            // --- STRATEGIA BASE ---
             if (info.isPair) {
                 const pVal = getBaseValue(userCards[0]);
-                if (pVal === 11 || pVal === 8) return "DIVIDI";
-                if (pVal === 5 || pVal === 10) {} // Tratta come totale duro
-                else if (pVal === 9) return (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI";
-                else if (pVal === 7) return dVal <= 7 ? "DIVIDI" : "CHIEDI";
-                else if (pVal === 6) return dVal <= 6 ? "DIVIDI" : "CHIEDI";
-                else if (pVal === 4) return (dVal === 5 || dVal === 6) ? "DIVIDI" : "CHIEDI";
-                else if (pVal === 2 || pVal === 3) return dVal <= 7 ? "DIVIDI" : "CHIEDI";
+                if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
+                if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
+                if (pVal === 7 || pVal === 6) return { action: dVal <= 7 ? "DIVIDI" : "CHIEDI", note: insuranceNote };
+                if (pVal === 2 || pVal === 3) return { action: dVal <= 7 ? "DIVIDI" : "CHIEDI", note: insuranceNote };
             }
 
-            // Mani Soft (Con Asso attivo)
-            if (info.isSoft && userCards.length === 2) {
-                const other = info.total - 11;
-                if (other >= 8) return "STAI";
-                if (other === 7) return (dVal >= 3 && dVal <= 6) ? "RADDOPPIA" : (dVal >= 9 ? "CHIEDI" : "STAI");
-                if (other === 6) return (dVal >= 3 && dVal <= 6) ? "RADDOPPIA" : "CHIEDI";
-                if (other === 4 || other === 5) return (dVal >= 4 && dVal <= 6) ? "RADDOPPIA" : "CHIEDI";
-                if (other === 2 || other === 3) return (dVal === 5 || dVal === 6) ? "RADDOPPIA" : "CHIEDI";
-            }
-            // Gestione soft post-hit
-            if (info.isSoft && info.total >= 18) return "STAI";
-            if (info.isSoft && info.total < 18) return "CHIEDI";
+            if (info.total >= 17 && !info.isSoft) return { action: "STAI", note: insuranceNote };
+            if (info.total >= 13 && info.total <= 16 && !info.isSoft) return { action: (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
+            if (info.total === 12 && !info.isSoft) return { action: (dVal >= 4 && dVal <= 6) ? "STAI" : "CHIEDI", note: insuranceNote };
+            if (info.total === 11) return { action: (info.count === 2) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 10) return { action: (info.count === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
+            if (info.total === 9) return { action: (info.count === 2 && dVal >= 3 && dVal <= 6) ? "RADDOPPIA" : "CHIEDI", note: insuranceNote };
 
-            // Mani Hard (Totale rigido)
-            if (info.total >= 17) return "STAI";
-            if (info.total === 16) return (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI";
-            if (info.total === 15) return (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI";
-            if (info.total === 13 || info.total === 14) return (dVal >= 2 && dVal <= 6) ? "STAI" : "CHIEDI";
-            if (info.total === 12) return (dVal >= 4 && dVal <= 6) ? "STAI" : "CHIEDI";
-            if (info.total === 11) return (userCards.length === 2) ? "RADDOPPIA" : "CHIEDI";
-            if (info.total === 10) return (userCards.length === 2 && dVal <= 9) ? "RADDOPPIA" : "CHIEDI";
-            if (info.total === 9) return (userCards.length === 2 && dVal >= 3 && dVal <= 6) ? "RADDOPPIA" : "CHIEDI";
-            
-            return "CHIEDI";
+            return { action: "CHIEDI", note: insuranceNote };
         }
 
-        // Aggiornamento Interfaccia
         function updateUI() {
-            // Display Carta Dealer
-            const dDisp = document.getElementById('dealerCardDisplay');
-            dDisp.innerHTML = dealerCard ? `<span class="card-tag">${dealerCard}</span>` : '';
-
-            // Display Carte Giocatore
-            const uDisp = document.getElementById('userCardsDisplay');
-            uDisp.innerHTML = userCards.map(c => `<span class="card-tag">${c}</span>`).join('');
-
-            // Display Totale Giocatore
-            const info = getUserHandInfo();
-            const totalTitle = info.isSoft ? `Totale (Soft): ${info.total}` : `Totale: ${info.total}`;
-            document.getElementById('userTotalDisplay').innerText = userCards.length > 0 ? totalTitle : "Totale: 0";
-
-            // Calcolo e Display Decisione
-            const action = calculateStrategy();
-            const decBox = document.getElementById('decisionOutput');
-            decBox.innerText = action;
+            const dSlot = document.getElementById('dealerSlot');
+            dSlot.innerHTML = dealerCard ? `<span class="card-tag">${dealerCard}</span>` : '';
             
-            // Colori dinamici decisione
-            if (action === "SBALLATO!") decBox.style.color = "#d62828";
-            else if (action === "STAI") decBox.style.color = "#e63946";
-            else if (action === "CHIEDI") decBox.style.color = "#52b788";
-            else if (action === "RADDOPPIA") decBox.style.color = "#d4af37";
-            else if (action === "DIVIDI") decBox.style.color = "#4ea8de";
-            else decBox.style.color = "#ffffff";
+            for (let i = 1; i <= 7; i++) {
+                const key = `SEAT${i}`;
+                const seatEl = document.getElementById(`seat${i}`);
+                const titleEl = document.getElementById(`st${i}`);
+                const cardsEl = document.getElementById(`sc${i}`);
+
+                seatEl.className = 'seat';
+                if (key === activeTargetKey) seatEl.classList.add('active');
+                if (key === userSeatKey) seatEl.classList.add('user-seat');
+
+                titleEl.innerText = (key === userSeatKey) ? `IO (P${i})` : `P${i}`;
+                cardsEl.innerHTML = seats[key].map(c => `<span class="card-tag">${c}</span>`).join('');
+            }
+
+            const res = calculateStrategy();
+            document.getElementById('decisionOutput').innerText = res.action;
+            document.getElementById('deviationNote').innerText = res.note;
         }
 
-        // Gestione Nuova Mano / Reset
         function nextHand() {
             dealerCard = null;
-            userCards = [];
-            setInputState('DEALER');
+            seats = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
+            activeTargetKey = 'DEALER';
             updateUI();
         }
 
         function resetAll() {
-            if (confirm("Vuoi azzerare il conteggio dell'intero mazzo (6 mazzi)?")) {
+            if (confirm("Reset completo del mazzo e dei conteggi?")) {
                 runningCount = 0;
                 totalCardsSeen = 0;
+                currentTrueCount = 0;
                 nextHand();
             }
         }
 
-        // Start App
         updateUI();
     </script>
 </body>
