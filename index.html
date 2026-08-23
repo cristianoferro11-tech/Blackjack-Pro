@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Bankroll & 7 Seats</title>
+    <title>Blackjack Pro - Kelly Bankroll Engine</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
         h1 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #d4af37; margin-bottom: 4px; text-align: center; }
 
-        /* Sfondo e Layout Tavolo Verde a 7 posti (Invertito: P1 a destra) */
+        /* Sfondo Tavolo Verde */
         .felt-table { 
             width: 100%; 
             max-width: 500px; 
@@ -25,7 +25,7 @@
         .dealer-area { text-align: center; margin-bottom: 6px; }
         .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 60px; min-height: 36px; background: rgba(0,0,0,0.4); border: 2px dashed #d4af37; border-radius: 6px; padding: 2px; align-items: center; cursor: pointer; }
 
-        /* Griglia a 7 Postazioni invertite */
+        /* Postazioni invertite (P1 Destra -> P7 Sinistra) */
         .seats-container { display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 10px; align-items: flex-end; padding: 0 2px; }
         .seat { 
             width: 62px; 
@@ -42,29 +42,32 @@
         .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
         .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; min-height: 26px; }
 
-        /* Tag Carte */
         .card-tag { background: #ffffff; color: #000; font-weight: 900; padding: 1px 3px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #000; line-height: 1.1; }
 
-        /* Output Decisione e Risultato */
+        /* Configurazione Bankroll Iniziale */
+        .bankroll-config { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; background: rgba(0,0,0,0.7); border: 1px solid #d4af37; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.72rem; }
+        .bankroll-input { width: 70px; background: #222; border: 1px solid #d4af37; color: #fff; font-weight: bold; padding: 2px 4px; border-radius: 4px; text-align: center; }
+
+        /* Output Decisione */
         .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 6px; }
         .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
         .decision-text { font-size: 1.3rem; font-weight: 900; color: #74c69d; }
         .deviation-note { font-size: 0.68rem; color: #d4af37; font-weight: bold; }
         .outcome-text { font-size: 1.1rem; font-weight: 900; margin-top: 2px; }
 
-        /* Dashboard Financial & Stats */
+        /* Dashboard Kelly Stats */
         .stats-row { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 0.7rem; background: rgba(0,0,0,0.6); padding: 5px 8px; border-radius: 6px; margin-bottom: 6px; }
         .stat-val { color: #d4af37; font-weight: bold; }
         .profit-pos { color: #52b788; font-weight: bold; }
         .profit-neg { color: #e63946; font-weight: bold; }
 
-        /* Tastierino Carte */
+        /* Tastierino */
         .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 500px; margin-bottom: 6px; }
         .key-btn { background: #343a40; border: 1px solid #6c757d; color: white; font-size: 1.1rem; font-weight: 900; padding: 9px 0; border-radius: 6px; cursor: pointer; text-align: center; }
         .key-btn:active { background: #d4af37; color: black; }
         .key-btn.asso { background: #d4af37; color: black; }
 
-        /* Bottoni Azioni */
+        /* Bottoni */
         .actions-row { display: flex; gap: 6px; width: 100%; max-width: 500px; margin-top: auto; }
         .act-btn { flex: 1; padding: 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; text-transform: uppercase; }
         .btn-reset { background: #e63946; color: white; }
@@ -74,9 +77,16 @@
 </head>
 <body>
 
-    <h1>Blackjack Pro - Real Table & Budget Engine</h1>
+    <h1>Blackjack Pro - Kelly Engine</h1>
 
-    <!-- Tavolo Semicircolare Verde (Postazioni ordinate da Destra a Sinistra) -->
+    <!-- Configurazione Capitale Iniziale -->
+    <div class="bankroll-config">
+        <span>Capitale Iniziale (€):</span>
+        <input type="number" id="initBankrollInput" class="bankroll-input" value="500" step="50" onchange="setInitialBankroll(this.value)">
+        <span>Unit Base (1%): <strong id="unitBaseVal" style="color: #d4af37;">5€</strong></span>
+    </div>
+
+    <!-- Tavolo Verde -->
     <div class="felt-table">
         <!-- Dealer -->
         <div class="dealer-area">
@@ -84,7 +94,7 @@
             <div id="dealerSlot" class="dealer-card-slot" onclick="selectTarget('DEALER')"></div>
         </div>
 
-        <!-- 7 Postazioni Giocatori (Da Destra P1 a Sinistra P7) -->
+        <!-- 7 Postazioni -->
         <div class="seats-container">
             <div id="seat1" class="seat" onclick="selectTarget('SEAT1')">
                 <div class="seat-title" id="st1">P1</div>
@@ -117,7 +127,7 @@
         </div>
     </div>
 
-    <!-- Output Decisione e Risultato Mano -->
+    <!-- Decision Box -->
     <div class="decision-box">
         <div class="decision-title">Consiglio / Esito Mano</div>
         <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
@@ -125,15 +135,15 @@
         <div id="outcomeDisplay" class="outcome-text"></div>
     </div>
 
-    <!-- Statistiche Hi-Lo & Budget -->
+    <!-- Financials & Stats -->
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
-        <div>Puntata: <span id="betVal" class="stat-val">10€</span></div>
+        <div>Puntata Kelly: <span id="betVal" class="stat-val">5€ (1 U)</span></div>
         <div>Profitto: <span id="profitVal" class="profit-pos">0€</span></div>
         <div>Bankroll: <span id="bankrollVal" class="stat-val">500€</span></div>
     </div>
 
-    <!-- Tastierino Carte -->
+    <!-- Tastierino -->
     <div class="keypad">
         <button class="key-btn" onclick="inputCard('2')">2</button>
         <button class="key-btn" onclick="inputCard('3')">3</button>
@@ -147,7 +157,7 @@
         <button class="key-btn asso" onclick="inputCard('A')">A</button>
     </div>
 
-    <!-- Gestione Turni e Risoluzione -->
+    <!-- Azioni -->
     <div class="actions-row">
         <button class="act-btn btn-resolve" onclick="resolveHand()">Calcola Risultato</button>
         <button class="act-btn btn-next" onclick="nextHand()">Nuova Mano</button>
@@ -160,20 +170,36 @@
         let userSeatKey = 'SEAT4';
         let activeTargetKey = 'DEALER';
         
-        // Contatori
         let runningCount = 0;
         let totalCardsSeen = 0;
         const totalDecks = 6;
         let currentTrueCount = 0;
 
-        // Gestione Budget e Profitto
-        const unitSize = 10; // Valore della Singola Unità (es. 10€)
+        // Gestione Kelly Bankroll
         let initialBankroll = 500;
         let currentBankroll = 500;
+        let unitSize = 5;
         let netProfit = 0;
-        let currentBet = 10;
+        let currentBet = 5;
+        let currentUnits = 1;
         let handResolved = false;
         let lastActionRecommended = "CHIEDI";
+
+        function setInitialBankroll(val) {
+            let num = parseFloat(val);
+            if (isNaN(num) || num <= 0) num = 500;
+            initialBankroll = num;
+            currentBankroll = num;
+            netProfit = 0;
+            recalculateKellyUnit();
+            updateFinancials();
+        }
+
+        function recalculateKellyUnit() {
+            // L'unità base è l'1% del bankroll residuo (minimo 1€)
+            unitSize = Math.max(1, Math.floor(currentBankroll / 100));
+            document.getElementById('unitBaseVal').innerText = `${unitSize}€`;
+        }
 
         function selectTarget(key) {
             if (key.startsWith('SEAT') && activeTargetKey === key && userSeatKey !== key) {
@@ -202,13 +228,17 @@
             const remainingDecks = Math.max(0.5, totalDecks - (totalCardsSeen / 52));
             currentTrueCount = runningCount / remainingDecks;
             
-            // Calcolo Unità di puntata in base al TC
-            let units = 1;
-            if (currentTrueCount >= 2) units = Math.floor(currentTrueCount);
-            currentBet = units * unitSize;
+            // Rampa di Puntata Kelly basata sul TC
+            if (currentTrueCount <= 1) currentUnits = 1;
+            else if (currentTrueCount < 3) currentUnits = 2;
+            else if (currentTrueCount < 4) currentUnits = 4;
+            else if (currentTrueCount < 5) currentUnits = 6;
+            else currentUnits = 8; // Max Bet Ramp per TC >= +5
+
+            currentBet = currentUnits * unitSize;
 
             document.getElementById('tcVal').innerText = currentTrueCount.toFixed(1);
-            document.getElementById('betVal').innerText = `${currentBet}€`;
+            document.getElementById('betVal').innerText = `${currentBet}€ (${currentUnits} U)`;
         }
 
         function calculateHandTotal(cardsArr) {
@@ -287,7 +317,6 @@
             let outcomeTxt = "";
             let winAmount = 0;
 
-            // Raddoppio effettivo se suggerito o eseguito
             let betMultiplier = (lastActionRecommended === "RADDOPPIA") ? 2 : 1;
             let actualBet = currentBet * betMultiplier;
 
@@ -325,6 +354,7 @@
             outcomeEl.innerText = outcomeTxt;
             outcomeEl.style.color = winAmount > 0 ? "#52b788" : (winAmount < 0 ? "#e63946" : "#d4af37");
 
+            recalculateKellyUnit();
             updateFinancials();
         }
 
@@ -336,13 +366,11 @@
         }
 
         function updateUI() {
-            // Render Dealer Cards
             const dSlot = document.getElementById('dealerSlot');
             const dInfo = calculateHandTotal(dealerCards);
             dSlot.innerHTML = dealerCards.map(c => `<span class="card-tag">${c}</span>`).join('');
             document.getElementById('dealerTitle').innerText = `Mazziere (${dInfo.total})`;
 
-            // Render Seats
             for (let i = 1; i <= 7; i++) {
                 const key = `SEAT${i}`;
                 const seatEl = document.getElementById(`seat${i}`);
@@ -357,7 +385,6 @@
                 cardsEl.innerHTML = seats[key].map(c => `<span class="card-tag">${c}</span>`).join('');
             }
 
-            // Strat Output
             if (!handResolved) {
                 const res = calculateStrategy();
                 lastActionRecommended = res.action;
@@ -376,18 +403,20 @@
         }
 
         function resetAll() {
-            if (confirm("Reset del mazzo, dei conteggi e del budget?")) {
+            if (confirm("Reset completo del mazzo e dei conteggi?")) {
                 runningCount = 0;
                 totalCardsSeen = 0;
                 currentTrueCount = 0;
                 currentBankroll = initialBankroll;
                 netProfit = 0;
+                recalculateKellyUnit();
                 updateFinancials();
                 nextHand();
             }
         }
 
         updateUI();
+        recalculateKellyUnit();
         updateFinancials();
     </script>
 </body>
