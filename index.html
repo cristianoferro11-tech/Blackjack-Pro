@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack Pro - Fixed Split & Double Payouts</title>
+    <title>Blackjack Pro - Multi-Player Split</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
@@ -58,27 +58,27 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Animazione Split Invertita (Mano A a Destra, Mano B a Sinistra) */
-        .split-container { display: flex; flex-direction: row-reverse; gap: 4px; justify-content: center; width: 100%; }
+        /* Container Split Generico per Tutti i Giocatori */
+        .split-container { display: flex; flex-direction: row-reverse; gap: 3px; justify-content: center; width: 100%; }
         .split-hand { 
-            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px; min-width: 36px; min-height: 28px; background: rgba(0,0,0,0.3);
+            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px; min-width: 26px; min-height: 26px; background: rgba(0,0,0,0.3);
             transition: all 0.3s ease; text-align: center;
         }
-        .split-hand-label { font-size: 0.45rem; color: #aaa; text-transform: uppercase; margin-bottom: 1px; font-weight: bold; }
+        .split-hand-label { font-size: 0.42rem; color: #aaa; text-transform: uppercase; margin-bottom: 1px; font-weight: bold; }
         .split-hand.active-subhand { border: 2px solid #38b000; background: rgba(56,176,0,0.25); transform: scale(1.05); }
         .split-hand.hand-a { animation: slideRight 0.35s ease forwards; }
         .split-hand.hand-b { animation: slideLeft 0.35s ease forwards; }
 
         @keyframes slideRight {
-            0% { transform: translateX(-10px); }
+            0% { transform: translateX(-8px); }
             100% { transform: translateX(0); }
         }
         @keyframes slideLeft {
-            0% { transform: translateX(10px); }
+            0% { transform: translateX(8px); }
             100% { transform: translateX(0); }
         }
 
-        /* Badge Raddoppio Animato (2X Pop-up) */
+        /* Badge Raddoppio Animato */
         .double-badge {
             position: absolute; top: -10px; right: -6px; background: #d4af37; color: #000; font-size: 0.6rem; font-weight: 900;
             padding: 2px 5px; border-radius: 10px; border: 1px solid #fff; box-shadow: 0 0 8px #d4af37;
@@ -92,10 +92,10 @@
             100% { transform: scale(1) rotate(0deg); }
         }
 
-        /* Indicatore Turno Corrente */
+        /* Turn Tracker */
         .turn-tracker { width: 100%; max-width: 500px; background: #111; border: 1px solid #38b000; color: #38b000; font-weight: bold; font-size: 0.75rem; text-align: center; padding: 4px; border-radius: 6px; margin-bottom: 6px; text-transform: uppercase; }
 
-        /* Top Config Bankroll */
+        /* Top Config */
         .top-config { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; background: rgba(0,0,0,0.7); border: 1px solid #d4af37; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.72rem; }
         .bankroll-input { width: 65px; background: #222; border: 1px solid #d4af37; color: #fff; font-weight: bold; padding: 2px 4px; border-radius: 4px; text-align: center; }
 
@@ -104,14 +104,14 @@
         .opt-btn { flex: 1; padding: 6px; font-size: 0.72rem; font-weight: bold; border-radius: 4px; border: 1px solid #777; background: #222; color: #fff; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
         .opt-btn.active { background: #d4af37; color: #000; border-color: #fff; font-weight: 900; box-shadow: 0 0 8px rgba(212,175,55,0.6); }
 
-        /* Output Decisione */
+        /* Decision Box */
         .decision-box { width: 100%; max-width: 500px; background: #000000; border: 2px solid #d4af37; border-radius: 8px; padding: 5px; text-align: center; margin-bottom: 6px; }
         .decision-title { font-size: 0.6rem; text-transform: uppercase; color: #aaa; }
         .decision-text { font-size: 1.15rem; font-weight: 900; color: #74c69d; }
         .deviation-note { font-size: 0.65rem; color: #d4af37; font-weight: bold; }
         .outcome-text { font-size: 0.9rem; font-weight: 900; margin-top: 2px; }
 
-        /* Area Chip Betting System */
+        /* Area Chip */
         .chips-section { width: 100%; max-width: 500px; background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 8px; padding: 5px; margin-bottom: 6px; text-align: center; }
         .chips-title { font-size: 0.65rem; color: #aaa; text-transform: uppercase; margin-bottom: 3px; }
         .chips-row { display: flex; justify-content: space-around; align-items: center; gap: 4px; }
@@ -152,9 +152,8 @@
 </head>
 <body>
 
-    <h1>Blackjack Pro - Fixed Split & Double Payouts</h1>
+    <h1>Blackjack Pro - Multi-Player Split</h1>
 
-    <!-- Configurazione Top -->
     <div class="top-config">
         <div><span>Punta con Fiches e inserisci carte</span></div>
         <div>
@@ -163,15 +162,12 @@
         </div>
     </div>
 
-    <!-- Tavolo Verde -->
     <div class="felt-table">
-        <!-- Dealer -->
         <div class="dealer-area">
             <div class="seat-title" id="dealerTitle">Mazziere (0)</div>
             <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
         </div>
 
-        <!-- 7 Postazioni Invertite (Da P1 a P7 da Destra verso Sinistra) -->
         <div class="seats-container">
             <div id="seat1" class="seat" onclick="toggleSeatActive('SEAT1')">
                 <div class="seat-title" id="st1">P1</div>
@@ -205,16 +201,13 @@
         </div>
     </div>
 
-    <!-- Indicatore Turno Automatico -->
     <div id="turnTracker" class="turn-tracker">PROSSIMA CARTA PER: P1</div>
 
-    <!-- Opzioni Speciali: Raddoppio & Split -->
     <div class="special-actions-row">
         <button id="btnSplit" class="opt-btn" onclick="toggleSplit()">✂️ Split Mano</button>
         <button id="btnDouble" class="opt-btn" onclick="toggleDouble()">2x Raddoppio</button>
     </div>
 
-    <!-- System Chip Puntata -->
     <div class="chips-section">
         <div class="chips-title">Puntata Base: <strong id="currentBetDisplay" style="color:#74c69d; font-size:0.85rem;">0€</strong> <span id="recommendedBetDisplay" style="color:#d4af37; font-size:0.68rem; margin-left:6px;">(Consigliati: 5€)</span></div>
         <div class="chips-row">
@@ -227,7 +220,6 @@
         </div>
     </div>
 
-    <!-- Decision Box -->
     <div class="decision-box">
         <div class="decision-title" id="decisionHeader">Consiglio Per La Tua Mano</div>
         <div id="decisionOutput" class="decision-text">INSERISCI CARTE</div>
@@ -235,14 +227,12 @@
         <div id="outcomeDisplay" class="outcome-text"></div>
     </div>
 
-    <!-- Financials & Stats -->
     <div class="stats-row">
         <div>TC: <span id="tcVal" class="stat-val">0.0</span></div>
         <div>Profitto: <span id="profitVal" class="profit-pos">0€</span></div>
         <div>Bankroll: <span id="bankrollVal" class="stat-val">500€</span></div>
     </div>
 
-    <!-- Tastierino -->
     <div class="keypad">
         <button class="key-btn" onclick="inputCard('2')">2</button>
         <button class="key-btn" onclick="inputCard('3')">3</button>
@@ -256,7 +246,6 @@
         <button class="key-btn asso" onclick="inputCard('A')">A</button>
     </div>
 
-    <!-- Azioni -->
     <div class="actions-row">
         <button class="act-btn btn-stand" onclick="playerStands()">✋ STAI (PASSA)</button>
         <button class="act-btn btn-undo" onclick="undoLastCard()">↩ Annulla</button>
@@ -268,9 +257,16 @@
         let dealerCards = [];
         let seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
         
-        let splitHandA = [];
-        let splitHandB = [];
-        let activeSplitHand = 'A'; // 'A' (Destra) o 'B' (Sinistra)
+        // Struttura Split Generica per tutte le postazioni
+        let splitStates = {
+            SEAT1: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT2: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT3: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT4: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT5: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT6: { active: false, handA: [], handB: [], current: 'A' },
+            SEAT7: { active: false, handA: [], handB: [], current: 'A' }
+        };
 
         let activeSeats = { SEAT1: false, SEAT2: false, SEAT3: false, SEAT4: true, SEAT5: false, SEAT6: false, SEAT7: false };
         let userSeatKey = 'SEAT4';
@@ -283,7 +279,6 @@
         let activePlayerOrder = [];
         let currentPlayerTurnIndex = 0;
 
-        let isSplitActive = false;
         let isDoubleActive = false;
         let inputHistory = [];
 
@@ -311,7 +306,8 @@
         }
 
         function updateChipsDisplay() {
-            let totalRisk = userBet * (isDoubleActive ? 2 : 1) * (isSplitActive ? 2 : 1);
+            let userSplit = splitStates[userSeatKey].active;
+            let totalRisk = userBet * (isDoubleActive ? 2 : 1) * (userSplit ? 2 : 1);
             document.getElementById('currentBetDisplay').innerText = `${userBet}€ ${totalRisk !== userBet ? '(Totale a Rischio: ' + totalRisk + '€)' : ''}`;
         }
 
@@ -322,25 +318,30 @@
             updateUI();
         }
 
+        // Funzione Split Universale: Splitta il giocatore del turno corrente
         function toggleSplit() {
-            const userCards = seatsCards[userSeatKey];
-            if (!isSplitActive) {
-                if (userCards.length < 2) {
-                    alert("Servono 2 carte per dividere la mano!");
+            let currentTarget = getActiveTarget();
+            if (currentTarget === 'DEALER') return;
+
+            let st = splitStates[currentTarget];
+            let cards = seatsCards[currentTarget];
+
+            if (!st.active) {
+                if (cards.length < 2) {
+                    alert(`Servono almeno 2 carte per dividere la mano di ${currentTarget === userSeatKey ? 'IO' : currentTarget}!`);
                     return;
                 }
-                isSplitActive = true;
-                splitHandA = [userCards[0]];
-                splitHandB = [userCards[1]];
-                activeSplitHand = 'A';
+                st.active = true;
+                st.handA = [cards[0]];
+                st.handB = [cards[1]];
+                st.current = 'A';
             } else {
-                isSplitActive = false;
-                seatsCards[userSeatKey] = [...splitHandA, ...splitHandB];
-                splitHandA = [];
-                splitHandB = [];
+                st.active = false;
+                seatsCards[currentTarget] = [...st.handA, ...st.handB];
+                st.handA = [];
+                st.handB = [];
             }
             
-            document.getElementById('btnSplit').classList.toggle('active', isSplitActive);
             updateChipsDisplay();
             updateUI();
         }
@@ -398,9 +399,11 @@
                 manualTargetOverride = null;
             } else if (currentQueueIndex >= targetQueue.length && currentPlayerTurnIndex < activePlayerOrder.length) {
                 let currentTarget = activePlayerOrder[currentPlayerTurnIndex];
-                if (currentTarget === userSeatKey && isSplitActive && activeSplitHand === 'A') {
-                    // Passa da Mano A (Destra) a Mano B (Sinistra)
-                    activeSplitHand = 'B';
+                let st = splitStates[currentTarget];
+                
+                if (st.active && st.current === 'A') {
+                    // Se ha fatto lo split ed è su Mano A, passa a Mano B
+                    st.current = 'B';
                 } else {
                     currentPlayerTurnIndex++;
                 }
@@ -416,20 +419,23 @@
 
         function inputCard(val) {
             let target = getActiveTarget();
+            let st = target !== 'DEALER' ? splitStates[target] : null;
+            let currentSubHand = st ? st.current : 'A';
+
             addCardToTarget(target, val);
-            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex, playerIdx: currentPlayerTurnIndex, splitHand: activeSplitHand });
+            inputHistory.push({ target: target, card: val, queueIdx: currentQueueIndex, playerIdx: currentPlayerTurnIndex, subHand: currentSubHand });
 
             if (!manualTargetOverride && currentQueueIndex < targetQueue.length) {
                 currentQueueIndex++;
             }
 
             if (target !== 'DEALER' && currentQueueIndex >= targetQueue.length) {
-                let currentHandArr = (target === userSeatKey && isSplitActive) ? (activeSplitHand === 'A' ? splitHandA : splitHandB) : seatsCards[target];
+                let currentHandArr = st.active ? (st.current === 'A' ? st.handA : st.handB) : seatsCards[target];
                 let res = calculateHandTotal(currentHandArr);
                 
                 if (res.total >= 21) {
-                    if (target === userSeatKey && isSplitActive && activeSplitHand === 'A') {
-                        activeSplitHand = 'B';
+                    if (st.active && st.current === 'A') {
+                        st.current = 'B';
                     } else {
                         currentPlayerTurnIndex++;
                     }
@@ -444,11 +450,14 @@
             updateCount(cardVal, 1);
             if (targetKey === 'DEALER') {
                 dealerCards.push(cardVal);
-            } else if (targetKey === userSeatKey && isSplitActive) {
-                if (activeSplitHand === 'A') splitHandA.push(cardVal);
-                else splitHandB.push(cardVal);
             } else {
-                seatsCards[targetKey].push(cardVal);
+                let st = splitStates[targetKey];
+                if (st.active) {
+                    if (st.current === 'A') st.handA.push(cardVal);
+                    else st.handB.push(cardVal);
+                } else {
+                    seatsCards[targetKey].push(cardVal);
+                }
             }
         }
 
@@ -461,12 +470,15 @@
 
             if (targetKey === 'DEALER') {
                 dealerCards.pop();
-            } else if (targetKey === userSeatKey && isSplitActive) {
-                if (lastInput.splitHand === 'A') splitHandA.pop();
-                else splitHandB.pop();
-                activeSplitHand = lastInput.splitHand;
             } else {
-                seatsCards[targetKey].pop();
+                let st = splitStates[targetKey];
+                if (st.active) {
+                    if (lastInput.subHand === 'A') st.handA.pop();
+                    else st.handB.pop();
+                    st.current = lastInput.subHand;
+                } else {
+                    seatsCards[targetKey].pop();
+                }
             }
 
             currentQueueIndex = lastInput.queueIdx;
@@ -526,14 +538,15 @@
         }
 
         function calculateStrategy() {
-            const currentHandCards = isSplitActive ? (activeSplitHand === 'A' ? splitHandA : splitHandB) : seatsCards[userSeatKey];
+            let uSt = splitStates[userSeatKey];
+            const currentHandCards = uSt.active ? (uSt.current === 'A' ? uSt.handA : uSt.handB) : seatsCards[userSeatKey];
             if (dealerCards.length === 0 || currentHandCards.length === 0) return { action: "DISTRIBUZIONE...", note: "Attendi completamento carte" };
 
             const info = calculateHandTotal(currentHandCards);
             const dVal = getBaseValue(dealerCards[0]);
             const tc = currentTrueCount;
 
-            let prefix = isSplitActive ? `[MANO ${activeSplitHand === 'A' ? 'A (Destra)' : 'B (Sinistra)'}] ` : '';
+            let prefix = uSt.active ? `[MANO ${uSt.current === 'A' ? 'A (Destra)' : 'B (Sinistra)'}] ` : '';
 
             if (info.busted) return { action: prefix + "SBALLATO!", note: "" };
             if (info.isBlackjack) return { action: prefix + "BLACKJACK!", note: "Paga 3 a 2" };
@@ -546,7 +559,7 @@
             if (info.total === 11 && currentHandCards.length === 2 && dVal === 11 && tc >= 1) return { action: prefix + "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +1)" };
             if (info.total === 10 && currentHandCards.length === 2 && (dVal === 10 || dVal === 11) && tc >= 4) return { action: prefix + "RADDOPPIA", note: "Deviazione Hi-Lo (TC >= +4)" };
 
-            if (!isSplitActive && currentHandCards.length === 2 && getBaseValue(currentHandCards[0]) === getBaseValue(currentHandCards[1])) {
+            if (!uSt.active && currentHandCards.length === 2 && getBaseValue(currentHandCards[0]) === getBaseValue(currentHandCards[1])) {
                 const pVal = getBaseValue(currentHandCards[0]);
                 if (pVal === 11 || pVal === 8) return { action: "DIVIDI", note: insuranceNote };
                 if (pVal === 9) return { action: (dVal === 7 || dVal >= 10) ? "STAI" : "DIVIDI", note: insuranceNote };
@@ -561,7 +574,6 @@
             return { action: prefix + "CHIEDI", note: insuranceNote };
         }
 
-        // Valutazione esatta di una singola mano contro il mazziere
         function evaluateSingleHandWin(userRes, dealerRes, stake) {
             if (userRes.busted) return -stake;
             if (dealerRes.busted) return stake;
@@ -573,28 +585,27 @@
 
             if (userRes.total > dealerRes.total) return stake;
             if (userRes.total < dealerRes.total) return -stake;
-            return 0; // Parità
+            return 0;
         }
 
-        // Calcolo Risoluzione Esatta
         function checkAutoResolve() {
             if (handResolved) return;
 
             if (dealerCards.length < 2) return;
             
-            if (isSplitActive && (splitHandA.length === 0 || splitHandB.length === 0)) return;
-            if (!isSplitActive && seatsCards[userSeatKey].length < 2) return;
+            let uSt = splitStates[userSeatKey];
+            if (uSt.active && (uSt.handA.length === 0 || uSt.handB.length === 0)) return;
+            if (!uSt.active && seatsCards[userSeatKey].length < 2) return;
 
             const dealerRes = calculateHandTotal(dealerCards);
             
-            // Il mazziere ha concluso se ha >= 17 o è sballato
             if (dealerRes.total >= 17 || dealerRes.busted) {
                 let baseStake = userBet * (isDoubleActive ? 2 : 1);
                 let winAmount = 0;
 
-                if (isSplitActive) {
-                    let winA = evaluateSingleHandWin(calculateHandTotal(splitHandA), dealerRes, baseStake);
-                    let winB = evaluateSingleHandWin(calculateHandTotal(splitHandB), dealerRes, baseStake);
+                if (uSt.active) {
+                    let winA = evaluateSingleHandWin(calculateHandTotal(uSt.handA), dealerRes, baseStake);
+                    let winB = evaluateSingleHandWin(calculateHandTotal(uSt.handB), dealerRes, baseStake);
                     winAmount = winA + winB;
                 } else {
                     winAmount = evaluateSingleHandWin(calculateHandTotal(seatsCards[userSeatKey]), dealerRes, baseStake);
@@ -637,22 +648,23 @@
                 const key = `SEAT${i}`;
                 const seatEl = document.getElementById(`seat${i}`);
                 const cardsEl = document.getElementById(`sc${i}`);
+                const st = splitStates[key];
 
                 seatEl.className = 'seat';
                 if (activeSeats[key]) seatEl.classList.add('active-player');
                 if (key === userSeatKey) seatEl.classList.add('user-seat');
                 if (key === currentTarget) seatEl.classList.add('target-turn');
 
-                if (key === userSeatKey && isSplitActive) {
+                if (st.active) {
                     cardsEl.innerHTML = `
                         <div class="split-container">
-                            <div class="split-hand hand-a ${activeSplitHand === 'A' && currentTarget === userSeatKey ? 'active-subhand' : ''}">
-                                <div class="split-hand-label">Mano A</div>
-                                ${splitHandA.map(c => `<span class="card-tag">${c}</span>`).join('')}
+                            <div class="split-hand hand-a ${st.current === 'A' && key === currentTarget ? 'active-subhand' : ''}">
+                                <div class="split-hand-label">A</div>
+                                ${st.handA.map(c => `<span class="card-tag">${c}</span>`).join('')}
                             </div>
-                            <div class="split-hand hand-b ${activeSplitHand === 'B' && currentTarget === userSeatKey ? 'active-subhand' : ''}">
-                                <div class="split-hand-label">Mano B</div>
-                                ${splitHandB.map(c => `<span class="card-tag">${c}</span>`).join('')}
+                            <div class="split-hand hand-b ${st.current === 'B' && key === currentTarget ? 'active-subhand' : ''}">
+                                <div class="split-hand-label">B</div>
+                                ${st.handB.map(c => `<span class="card-tag">${c}</span>`).join('')}
                             </div>
                         </div>
                     `;
@@ -661,7 +673,11 @@
                 }
             }
 
-            let turnText = currentTarget === 'DEALER' ? 'MAZZIERE' : (currentTarget === userSeatKey ? (isSplitActive ? `IO (MANO ${activeSplitHand === 'A' ? 'A - DESTRA' : 'B - SINISTRA'})` : 'LA TUA MANO (IO)') : `POSTAZIONE P${currentTarget.replace('SEAT','')}`);
+            // Aggiorna stato bottone Split in base al turno corrente
+            let curSt = currentTarget !== 'DEALER' ? splitStates[currentTarget] : null;
+            document.getElementById('btnSplit').classList.toggle('active', curSt && curSt.active);
+
+            let turnText = currentTarget === 'DEALER' ? 'MAZZIERE' : (currentTarget === userSeatKey ? (splitStates[userSeatKey].active ? `IO (MANO ${splitStates[userSeatKey].current === 'A' ? 'A - DESTRA' : 'B - SINISTRA'})` : 'LA TUA MANO (IO)') : `POSTAZIONE P${currentTarget.replace('SEAT','')}${curSt && curSt.active ? ' (MANO ' + curSt.current + ')' : ''}`);
             document.getElementById('turnTracker').innerText = handResolved ? "MANO CONCLUSA (CLICCA NUOVA MANO)" : `PROSSIMA CARTA PER: ${turnText}`;
 
             if (!handResolved) {
@@ -685,9 +701,15 @@
         function nextHand() {
             dealerCards = [];
             seatsCards = { SEAT1: [], SEAT2: [], SEAT3: [], SEAT4: [], SEAT5: [], SEAT6: [], SEAT7: [] };
-            splitHandA = [];
-            splitHandB = [];
-            activeSplitHand = 'A';
+            splitStates = {
+                SEAT1: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT2: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT3: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT4: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT5: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT6: { active: false, handA: [], handB: [], current: 'A' },
+                SEAT7: { active: false, handA: [], handB: [], current: 'A' }
+            };
             manualTargetOverride = null;
             currentQueueIndex = 0;
             currentPlayerTurnIndex = 0;
@@ -696,7 +718,6 @@
             inputHistory = [];
             userBet = 0;
             isDoubleActive = false;
-            isSplitActive = false;
             document.getElementById('doubleBadge').style.display = 'none';
             document.getElementById('btnDouble').classList.remove('active');
             document.getElementById('btnSplit').classList.remove('active');
