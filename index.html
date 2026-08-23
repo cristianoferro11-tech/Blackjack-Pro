@@ -9,23 +9,29 @@
         body { background-color: #0b1d13; color: #ffffff; padding: 6px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
         h1 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1.5px; color: #d4af37; margin-bottom: 6px; text-align: center; }
 
+        /* Container Generale Tavolo + Postazioni */
+        .table-wrapper {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            margin-bottom: 12px;
+            padding-bottom: 25px; /* Spazio per far uscire le sedie sotto il bordo */
+        }
+
         /* Sfondo Tavolo Verde con Curvatura Reale */
         .felt-table { 
             width: 100%; 
-            max-width: 500px; 
-            height: 230px;
+            height: 180px;
             background: radial-gradient(circle, #2d6a4f 0%, #1b4332 70%, #081c15 100%); 
             border: 4px solid #d4af37; 
-            border-radius: 20px 20px 200px 200px; 
+            border-radius: 20px 20px 180px 180px; 
             padding: 10px 6px 14px 6px; 
             box-shadow: inset 0 0 25px rgba(0,0,0,0.85), 0 8px 20px rgba(0,0,0,0.7); 
-            margin-bottom: 6px; 
             position: relative;
-            overflow: hidden;
         }
 
-        /* Area Dealer */
-        .dealer-area { text-align: center; margin-bottom: 2px; }
+        /* Area Dealer (Sultavolo) */
+        .dealer-area { text-align: center; margin-top: 4px; }
         .dealer-title-badge {
             font-size: 0.85rem;
             font-weight: 900;
@@ -38,50 +44,53 @@
             box-shadow: 0 0 8px rgba(212,175,55,0.5);
             text-transform: uppercase;
         }
-        .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 70px; min-height: 40px; background: rgba(0,0,0,0.5); border: 2px dashed #d4af37; border-radius: 6px; padding: 3px; align-items: center; cursor: pointer; }
+        .dealer-card-slot { display: inline-flex; justify-content: center; gap: 3px; min-width: 70px; min-height: 42px; background: rgba(0,0,0,0.5); border: 2px dashed #d4af37; border-radius: 6px; padding: 3px; align-items: center; cursor: pointer; }
 
-        /* Postazioni Tavolo ad Arco (P1 a destra, P7 a sinistra) */
+        /* Postazioni Fuori dal Tavolo ad Arco */
         .seats-container { 
             position: absolute;
-            bottom: 12px;
+            bottom: -5px;
             left: 0;
             width: 100%;
-            height: 130px;
+            height: 120px;
             display: flex; 
             flex-direction: row-reverse; 
             justify-content: space-between; 
             align-items: flex-end; 
-            padding: 0 8px; 
+            padding: 0 6px; 
+            pointer-events: none; /* Rende la zona passante tranne le sedie */
         }
 
         .seat { 
+            pointer-events: auto;
             width: 58px; 
-            background: rgba(0,0,0,0.55); 
-            border: 1px solid rgba(212,175,55,0.3); 
-            border-radius: 6px; 
-            padding: 3px 1px 4px 1px; 
+            background: rgba(15, 23, 18, 0.95); 
+            border: 1px solid rgba(212,175,55,0.4); 
+            border-radius: 8px; 
+            padding: 4px 2px; 
             text-align: center; 
             cursor: pointer;
-            transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
-            opacity: 0.5;
+            transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            opacity: 0.6;
             position: relative;
             transform-origin: bottom center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
         }
 
-        /* Orientamento e Posizionamento a Semicerchio Reale */
-        #seat7 { transform: translateY(-48px) rotate(22deg); }
-        #seat6 { transform: translateY(-22px) rotate(14deg); }
-        #seat5 { transform: translateY(-6px) rotate(6deg); }
-        #seat4 { transform: translateY(2px) rotate(0deg); } /* Postazione centrale */
-        #seat3 { transform: translateY(-6px) rotate(-6deg); }
-        #seat2 { transform: translateY(-22px) rotate(-14deg); }
-        #seat1 { transform: translateY(-48px) rotate(-22deg); }
+        /* Orientamento e Posizionamento Esterno al Semicerchio */
+        #seat7 { transform: translateY(-40px) rotate(22deg); }
+        #seat6 { transform: translateY(-18px) rotate(14deg); }
+        #seat5 { transform: translateY(-4px) rotate(6deg); }
+        #seat4 { transform: translateY(8px) rotate(0deg); } /* Postazione centrale fuori bordi */
+        #seat3 { transform: translateY(-4px) rotate(-6deg); }
+        #seat2 { transform: translateY(-18px) rotate(-14deg); }
+        #seat1 { transform: translateY(-40px) rotate(-22deg); }
 
         .seat.active-player { opacity: 1; border-color: #d4af37; }
-        .seat.target-turn { border: 2px solid #38b000 !important; background: rgba(56,176,0,0.45) !important; opacity: 1; transform: scale(1.1) !important; z-index: 5; }
-        .seat.user-seat { border: 2px solid #d4af37; background: rgba(212,175,55,0.25); opacity: 1; width: 75px; }
+        .seat.target-turn { border: 2px solid #38b000 !important; background: rgba(20, 60, 25, 0.95) !important; opacity: 1; transform: scale(1.1) !important; z-index: 5; box-shadow: 0 0 12px #38b000; }
+        .seat.user-seat { border: 2px solid #d4af37; background: rgba(40, 35, 15, 0.95); opacity: 1; width: 70px; }
 
-        .seat-title { font-size: 0.55rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
+        .seat-title { font-size: 0.58rem; color: #d4af37; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; }
         .seat-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; min-height: 26px; }
         .seat-score { font-size: 0.62rem; font-weight: 900; color: #74c69d; margin-top: 2px; }
 
@@ -99,7 +108,7 @@
         /* Container Multi-Split */
         .split-container { display: flex; flex-direction: row-reverse; gap: 2px; justify-content: center; width: 100%; flex-wrap: nowrap; overflow-x: auto; }
         .split-hand { 
-            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px 1px; min-width: 20px; min-height: 26px; background: rgba(0,0,0,0.3);
+            border: 1px dashed #d4af37; border-radius: 4px; padding: 2px 1px; min-width: 20px; min-height: 26px; background: rgba(0,0,0,0.4);
             transition: all 0.25s ease; text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1;
         }
         .split-hand-label { font-size: 0.42rem; color: #aaa; text-transform: uppercase; margin-bottom: 1px; font-weight: bold; }
@@ -108,8 +117,8 @@
 
         /* Badge Raddoppio Animato */
         .double-badge {
-            position: absolute; top: -10px; right: -6px; background: #d4af37; color: #000; font-size: 0.6rem; font-weight: 900;
-            padding: 2px 5px; border-radius: 10px; border: 1px solid #fff; box-shadow: 0 0 8px #d4af37;
+            position: absolute; top: -10px; right: -6px; background: #d4af37; color: #000; font-size: 0.58rem; font-weight: 900;
+            padding: 2px 4px; border-radius: 10px; border: 1px solid #fff; box-shadow: 0 0 8px #d4af37;
             animation: doubleBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             z-index: 10;
         }
@@ -190,10 +199,12 @@
         </div>
     </div>
 
-    <div class="felt-table">
-        <div class="dealer-area">
-            <div class="dealer-title-badge" id="dealerTitle">Mazziere (0)</div><br>
-            <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
+    <div class="table-wrapper">
+        <div class="felt-table">
+            <div class="dealer-area">
+                <div class="dealer-title-badge" id="dealerTitle">Mazziere (0)</div><br>
+                <div id="dealerSlot" class="dealer-card-slot" onclick="selectTargetManual('DEALER')"></div>
+            </div>
         </div>
 
         <div class="seats-container">
